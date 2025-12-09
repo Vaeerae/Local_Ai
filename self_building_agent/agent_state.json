@@ -1,11 +1,8 @@
 ﻿{
   "chat_summary": "Conversation just started.",
   "project_summary": "Self-building agent bootstrapped; tools registered; no tasks run yet.",
-  "project_keywords": [
-    "agent",
-    "tools",
-    "ollama",
-    "planning"
-  ],
-  "prompt_extension": ""
+  "project_keywords": ["agent", "tools", "ollama", "planning"],
+  "prompt_extension": "",
+  "known_tools": [],
+  "plan_queue": []
 }
