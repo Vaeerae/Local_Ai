@@ -1,8 +1,51 @@
 ﻿{
-  "chat_summary": "Conversation just started.",
-  "project_summary": "Self-building agent bootstrapped; tools registered; no tasks run yet.",
-  "project_keywords": ["agent", "tools", "ollama", "planning"],
+  "chat_summary": "Benutzer wünscht UI für Ordner-Chat-Interface mit Desktop-App-Unterstützung. Planung für Projektstruktur, Installationsskript und UI-Design gestartet.",
+  "project_summary": "Entwicklung einer Desktop-Anwendung mit Ordner-Explorer (links) und Chat-Interface (rechts). Benötigt Ollama für KI-Interaktion. Struktur: `src/` (Code), `config/` (Modell-Einstellungen), `dist/` (Build-Ausgabe).",
+  "project_keywords": [
+    "Desktop-App",
+    "Ordner-Explorer",
+    "Chat-Interface",
+    "Ollama-Integration",
+    "Python",
+    "Electron/Tkinter",
+    "Installationsskript",
+    "Modellauswahl",
+    "Live-Updates"
+  ],
   "prompt_extension": "",
-  "known_tools": [],
-  "plan_queue": []
+  "known_tools": [
+    {
+      "name": "create_project_structure",
+      "kind": "python_macro",
+      "description": "Erstellt die Grundstruktur für das Projekt (Ordner wie `src/`, `config/`, etc.).",
+      "arguments_schema": {
+        "root_path": {
+          "type": "string",
+          "description": "Pfad zum Hauptverzeichnis des Projekts."
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Liste der zu erstellenden Unterordner."
+        }
+      },
+      "template": [
+        "import os",
+        "for folder in arguments.folders:",
+        "    os.makedirs(os.path.join(arguments.root_path, folder), exist_ok=True)",
+        "return f\"Struktur erstellt in: {os.path.abspath(arguments.root_path)}\""
+      ]
+    }
+  ],
+  "plan_queue": [
+    "2. **Installationsanleitung erstellen**: Skript für die Modellauswahl und Ollama-Installation (Python-basiert mit `subprocess` für Shell-Befehle).",
+    "3. **UI-Design skizzieren**: Ordner-Explorer (linke Seite) mit Baumansicht und Chat-Interface (rechte Seite) in HTML/CSS/JS (Frameworks wie Electron oder Tkinter für Desktop).",
+    "4. **Backend-Logik**: Python-Server für Dateisystem-Interaktion (z. B. `watchdog` für Live-Updates) und Ollama-Integration.",
+    "5. **Einstellungen-UI**: Konfigurationsseite für Modellauswahl und Ollama-Pfade (JSON-basiert).",
+    "6. **Desktop-App-Paketierung**: Anleitung für `pyinstaller`/`electron-builder` zur Erstellung einer ausführbaren Datei.",
+    "7. **Start-Hinweis**: Popup oder Banner beim ersten Start mit Ollama-Installationsanweisung.",
+    "8. **Dokumentation**: Schritt-für-Schritt-Anleitung für Benutzer (Markdown/PDF)."
+  ]
 }
