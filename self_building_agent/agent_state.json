@@ -1,6 +1,6 @@
 ﻿{
-  "chat_summary": "Benutzer wünscht UI für Ordner-Chat-Interface mit Desktop-App-Unterstützung. Planung für Projektstruktur, Installationsskript und UI-Design gestartet.",
-  "project_summary": "Entwicklung einer Desktop-Anwendung mit Ordner-Explorer (links) und Chat-Interface (rechts). Benötigt Ollama für KI-Interaktion. Struktur: `src/` (Code), `config/` (Modell-Einstellungen), `dist/` (Build-Ausgabe).",
+  "chat_summary": "Erstellung eines Python-Skripts für die Ollama-Installation und Modellauswahl (z. B. `llama3`) mit `subprocess`. Skript prüft bestehende Installation und lädt Modell herunter. Nächste Schritte: UI-Design und Backend-Logik.",
+  "project_summary": "Projekt für eine Desktop-Anwendung mit Ordner-Explorer (links) und Chat-Interface (rechts). Struktur: `src/` (Code), `config/` (Modell-Einstellungen), `dist/` (Build-Ausgabe). Aktuell: Skript für Ollama-Installation (`src/scripts/install_ollama.py`) und Vorbereitung der UI-Skizze (HTML/CSS/JS mit Electron/Tkinter).",
   "project_keywords": [
     "Desktop-App",
     "Ordner-Explorer",
@@ -10,7 +10,9 @@
     "Electron/Tkinter",
     "Installationsskript",
     "Modellauswahl",
-    "Live-Updates"
+    "Live-Updates",
+    "subprocess",
+    "UI-Design"
   ],
   "prompt_extension": "",
   "known_tools": [
@@ -37,15 +39,42 @@
         "    os.makedirs(os.path.join(arguments.root_path, folder), exist_ok=True)",
         "return f\"Struktur erstellt in: {os.path.abspath(arguments.root_path)}\""
       ]
+    },
+    {
+      "name": "setup_ollama_and_model",
+      "kind": "python_macro",
+      "description": "Erstellt ein Python-Skript zur Installation von Ollama und Auswahl eines KI-Modells (z. B. `llama3`). Nutzt `subprocess` für Shell-Befehle.",
+      "arguments_schema": {
+        "output_path": {
+          "type": "string",
+          "description": "Pfad zur Speicherung des Skripts (z. B. `src/scripts/install_ollama.py`)."
+        },
+        "model_name": {
+          "type": "string",
+          "description": "Name des zu installierenden Ollama-Modells (z. B. `llama3`)."
+        }
+      },
+      "template": [
+        "import subprocess",
+        "import os",
+        "",
+        "# Skript für Ollama-Installation und Modellauswahl",
+        "def install_ollama_and_model():",
+        "    # Prüfen, ob Ollama installiert ist",
+        "    try:",
+        "        subprocess.run(['ollama', '--version'], check=True, capture_output=True)",
+        "    except subprocess.CalledProcessError:",
+        "        print(\"Ollama nicht gefunden. Installation wird gestartet...\")",
+        "        subprocess.run(['sh', '-c', 'curl -fsSL https://ollama.ai/install.sh | sh'], check=True)",
+        "",
+        "    # Modell herunterladen (falls nicht vorhanden)",
+        "    subprocess.run(['ollama', 'pull', arguments.model_name], check=True)",
+        "    print(f\"Modell '{arguments.model_name}' ist bereit für den Einsatz.\")",
+        "",
+        "if __name__ == \"__main__\":",
+        "    install_ollama_and_model()"
+      ]
     }
   ],
-  "plan_queue": [
-    "2. **Installationsanleitung erstellen**: Skript für die Modellauswahl und Ollama-Installation (Python-basiert mit `subprocess` für Shell-Befehle).",
-    "3. **UI-Design skizzieren**: Ordner-Explorer (linke Seite) mit Baumansicht und Chat-Interface (rechte Seite) in HTML/CSS/JS (Frameworks wie Electron oder Tkinter für Desktop).",
-    "4. **Backend-Logik**: Python-Server für Dateisystem-Interaktion (z. B. `watchdog` für Live-Updates) und Ollama-Integration.",
-    "5. **Einstellungen-UI**: Konfigurationsseite für Modellauswahl und Ollama-Pfade (JSON-basiert).",
-    "6. **Desktop-App-Paketierung**: Anleitung für `pyinstaller`/`electron-builder` zur Erstellung einer ausführbaren Datei.",
-    "7. **Start-Hinweis**: Popup oder Banner beim ersten Start mit Ollama-Installationsanweisung.",
-    "8. **Dokumentation**: Schritt-für-Schritt-Anleitung für Benutzer (Markdown/PDF)."
-  ]
+  "plan_queue": []
 }

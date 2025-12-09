@@ -1,11 +1,14 @@
-﻿import json
+﻿import importlib
+import json
 import os
 import sys
 from dataclasses import dataclass, asdict
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Callable
 
 import ollama
 from pydantic import BaseModel, Field, ValidationError
+
+import tools
 
 ENCODING = "utf-8-sig"
 STATE_PATH = os.path.join(os.path.dirname(__file__), "agent_state.json")
@@ -76,54 +79,16 @@ class ToolResult(BaseModel):
     error: str = ""
 
 
-def create_directory(path: str) -> Dict[str, Any]:
-    try:
-        os.makedirs(path, exist_ok=True)
-        return ToolResult(success=True, message=f"Created directory {path}", output=None).model_dump()
-    except Exception as exc:
-        return ToolResult(success=False, message="Failed to create directory", error=str(exc)).model_dump()
+def load_tool_functions() -> Dict[str, Callable]:
+    return tools.load_tools()
 
 
-def write_file(path: str, content: str, overwrite: bool = False) -> Dict[str, Any]:
-    try:
-        if os.path.exists(path) and not overwrite:
-            return ToolResult(success=False, message="File exists and overwrite is False").model_dump()
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with safe_open(path, "w") as f:
-            f.write(content)
-        return ToolResult(success=True, message=f"Wrote file {path}", output=len(content)).model_dump()
-    except Exception as exc:
-        return ToolResult(success=False, message="Failed to write file", error=str(exc)).model_dump()
+def reload_tools_module() -> Dict[str, Callable]:
+    importlib.reload(tools)
+    return tools.load_tools()
 
 
-def run_shell(command: str, workdir: str = ".") -> Dict[str, Any]:
-    import subprocess
-
-    try:
-        proc = subprocess.run(
-            command,
-            shell=True,
-            cwd=workdir,
-            capture_output=True,
-            text=True,
-            check=False,
-        )
-        success = proc.returncode == 0
-        return ToolResult(
-            success=success,
-            message="Command executed" if success else f"Command failed ({proc.returncode})",
-            output=proc.stdout.strip(),
-            error=proc.stderr.strip(),
-        ).model_dump()
-    except Exception as exc:
-        return ToolResult(success=False, message="Exception during command", error=str(exc)).model_dump()
-
-
-TOOLS = {
-    "create_directory": create_directory,
-    "write_file": write_file,
-    "run_shell": run_shell,
-}
+TOOLS: Dict[str, Callable] = load_tool_functions()
 
 
 class ModelReply(BaseModel):
@@ -209,6 +174,7 @@ def call_model(state: AgentState, user_input: str) -> Tuple[ModelReply, str]:
 
 
 def handle_action(reply: ModelReply, state: AgentState) -> Dict[str, Any]:
+    global TOOLS
     mode = reply.action.get("mode", "none")
     if mode == "use_tool":
         tool_name = reply.action.get("tool_name")
@@ -219,9 +185,18 @@ def handle_action(reply: ModelReply, state: AgentState) -> Dict[str, Any]:
         return tool(**args)
     if mode == "define_tool":
         meta = reply.action.get("new_tool")
+        append_result = None
         if meta:
             state.known_tools.append(meta)
-        return {"success": True, "message": "Tool definition recorded (metadata only)", "tool_meta": meta}
+            tmpl = meta.get("template")
+            name = meta.get("name")
+            if name and tmpl:
+                append_result = tools.append_tool_from_template(name, tmpl)
+                TOOLS = reload_tools_module()
+        result = {"success": True, "message": "Tool definition recorded", "tool_meta": meta}
+        if append_result:
+            result["append_result"] = append_result
+        return result
     if mode == "update_prompt":
         return {
             "success": True,
