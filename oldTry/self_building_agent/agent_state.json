@@ -1,0 +1,193 @@
+﻿{
+  "chat_summary": "Erstellt Tool für Installationsanleitung mit Modellauswahl (Ollama) und Konfigurationsspeicherung. Nächste Schritte: Integration in Tkinter-UI und Build-Skript für Desktop-App.",
+  "project_summary": "Projekt für Desktop-App mit Ordner-Explorer (Tkinter) und Chat-Interface (Ollama-Integration). Aktuell: Installationsanleitung und UI-Grundgerüst erstellt. Ziel: Plattformübergreifende App mit Drag-and-Drop und Einstellungen-Menü.",
+  "project_keywords": [
+    "Desktop-App",
+    "Ordner-Explorer",
+    "Chat-Interface",
+    "Ollama-Integration",
+    "Tkinter/Electron",
+    "Installationsskript",
+    "Modellauswahl",
+    "Live-Updates",
+    "UI-Design",
+    "Drag-and-Drop"
+  ],
+  "prompt_extension": "",
+  "known_tools": [
+    {
+      "name": "create_project_structure",
+      "kind": "python_macro",
+      "description": "Erstellt die Grundstruktur für das Projekt (Ordner wie `src/`, `config/`, etc.).",
+      "arguments_schema": {
+        "root_path": {
+          "type": "string",
+          "description": "Pfad zum Hauptverzeichnis des Projekts."
+        },
+        "folders": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Liste der zu erstellenden Unterordner."
+        }
+      },
+      "template": [
+        "import os",
+        "for folder in arguments.folders:",
+        "    os.makedirs(os.path.join(arguments.root_path, folder), exist_ok=True)",
+        "return f\"Struktur erstellt in: {os.path.abspath(arguments.root_path)}\""
+      ]
+    },
+    {
+      "name": "setup_ollama_and_model",
+      "kind": "python_macro",
+      "description": "Erstellt ein Python-Skript zur Installation von Ollama und Auswahl eines KI-Modells (z. B. `llama3`). Nutzt `subprocess` für Shell-Befehle.",
+      "arguments_schema": {
+        "output_path": {
+          "type": "string",
+          "description": "Pfad zur Speicherung des Skripts (z. B. `src/scripts/install_ollama.py`)."
+        },
+        "model_name": {
+          "type": "string",
+          "description": "Name des zu installierenden Ollama-Modells (z. B. `llama3`)."
+        }
+      },
+      "template": [
+        "import subprocess",
+        "import os",
+        "",
+        "# Skript für Ollama-Installation und Modellauswahl",
+        "def install_ollama_and_model():",
+        "    # Prüfen, ob Ollama installiert ist",
+        "    try:",
+        "        subprocess.run(['ollama', '--version'], check=True, capture_output=True)",
+        "    except subprocess.CalledProcessError:",
+        "        print(\"Ollama nicht gefunden. Installation wird gestartet...\")",
+        "        subprocess.run(['sh', '-c', 'curl -fsSL https://ollama.ai/install.sh | sh'], check=True)",
+        "",
+        "    # Modell herunterladen (falls nicht vorhanden)",
+        "    subprocess.run(['ollama', 'pull', arguments.model_name], check=True)",
+        "    print(f\"Modell '{arguments.model_name}' ist bereit für den Einsatz.\")",
+        "",
+        "if __name__ == \"__main__\":",
+        "    install_ollama_and_model()"
+      ]
+    },
+    {
+      "name": "create_ui_structure",
+      "kind": "python_macro",
+      "description": "Erstellt die Grundstruktur für die UI (HTML/CSS/JS für Electron oder Tkinter für Python).",
+      "arguments_schema": {
+        "output_path": {
+          "type": "string",
+          "description": "Pfad zur Speicherung der UI-Dateien (z. B. `src/ui/`)."
+        },
+        "framework": {
+          "type": "string",
+          "description": "Framework für die UI (z. B. `electron` oder `tkinter`)."
+        }
+      },
+      "template": [
+        "import os",
+        "import shutil",
+        "",
+        "# UI-Struktur für Electron (HTML/CSS/JS) oder Tkinter (Python)",
+        "def create_ui_structure():",
+        "    if arguments.framework == 'electron':",
+        "        # Electron-Struktur (HTML/CSS/JS)",
+        "        os.makedirs(os.path.join(arguments.output_path, 'electron'), exist_ok=True)",
+        "        electron_path = os.path.join(arguments.output_path, 'electron')",
+        "        ",
+        "        # Haupt-UI-Dateien",
+        "        with open(os.path.join(electron_path, 'index.html'), 'w') as f:",
+        "            f.write('''<!DOCTYPE html><html><head><title>Chat-Explorer</title><link rel=\"stylesheet\" href=\"styles.css\"></head><body><div class=\"container\"><div class=\"explorer\" id=\"explorer\"></div><div class=\"chat\" id=\"chat\"></div></div><script src=\"app.js\"></script></body></html>''')",
+        "        ",
+        "        with open(os.path.join(electron_path, 'styles.css'), 'w') as f:",
+        "            f.write('''body { margin: 0; padding: 0; font-family: Arial, sans-serif; } .container { display: flex; height: 100vh; } .explorer { width: 30%; border-right: 1px solid #ccc; overflow-y: auto; } .chat { width: 70%; overflow-y: auto; }''')",
+        "        ",
+        "        with open(os.path.join(electron_path, 'app.js'), 'w') as f:",
+        "            f.write('''document.addEventListener('DOMContentLoaded', () => { console.log('UI geladen'); });''')",
+        "        ",
+        "        # Ordner-Explorer-Komponenten",
+        "        os.makedirs(os.path.join(electron_path, 'components'), exist_ok=True)",
+        "        with open(os.path.join(electron_path, 'components', 'explorer.js'), 'w') as f:",
+        "            f.write('''class Explorer { constructor() { this.render(); } render() { document.getElementById(\"explorer\").innerHTML = \"<h2>Ordner-Explorer</h2><div id=\\\"folder-tree\\\"></div>\"; } } new Explorer();''')",
+        "        ",
+        "        return f\"Electron-UI-Struktur erstellt in: {os.path.abspath(electron_path)}\"",
+        "    elif arguments.framework == 'tkinter':",
+        "        # Tkinter-Struktur (Python)",
+        "        os.makedirs(os.path.join(arguments.output_path, 'tkinter'), exist_ok=True)",
+        "        tkinter_path = os.path.join(arguments.output_path, 'tkinter')",
+        "        ",
+        "        with open(os.path.join(tkinter_path, 'main.py'), 'w') as f:",
+        "            f.write('''import tkinter as tk\nfrom tkinter import ttk\n\nclass App:\n    def __init__(self, root):\n        self.root = root\n        self.root.title(\"Chat-Explorer\")\n        self.root.geometry(\"1000x600\")\n        \n        # Ordner-Explorer (links)\n        self.explorer_frame = tk.Frame(root, width=300)\n        self.explorer_frame.pack(side=tk.LEFT, fill=tk.Y)\n        \n        # Chat-Interface (rechts)\n        self.chat_frame = tk.Frame(root, width=700)\n        self.chat_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)\n        \n        # Beispiel: Baumansicht für Ordner\n        self.tree = ttk.Treeview(self.explorer_frame)\n        self.tree.pack(fill=tk.BOTH, expand=True)\n        self.tree.heading(\"#0\", text=\"Ordner\", anchor=tk.W)\n        self.tree.insert(\"\", \"0\", text=\"C:\\\", open=True)\n        self.tree.insert(\"0\", \"1\", text=\"Projekte\")\n        \n        # Chat-Bereich\n        self.chat_text = tk.Text(self.chat_frame)\n        self.chat_text.pack(fill=tk.BOTH, expand=True)\n        self.chat_text.insert(tk.END, \"Hallo! Wähle einen Ordner aus.\")\n\nif __name__ == \"__main__\":\n    root = tk.Tk()\n    app = App(root)\n    root.mainloop()''')",
+        "        return f\"Tkinter-UI-Struktur erstellt in: {os.path.abspath(tkinter_path)}\"",
+        "    else:",
+        "        return \"Unsupported framework.\""
+      ]
+    },
+    {
+      "name": "create_installation_guide",
+      "kind": "python_macro",
+      "description": "Erstellt eine Installationsanleitung als Python-Skript, das beim ersten Start der Anwendung ausgeführt wird. Es fragt nach dem Ollama-Modell und speichert die Konfiguration in einer JSON-Datei.",
+      "arguments_schema": {
+        "output_path": {
+          "type": "string",
+          "description": "Pfad zur Speicherung des Skripts (z. B. `src/scripts/install_guide.py`)."
+        },
+        "config_path": {
+          "type": "string",
+          "description": "Pfad zur Konfigurationsdatei (z. B. `config/settings.json`)."
+        }
+      },
+      "template": [
+        "import json",
+        "import os",
+        "import subprocess",
+        "",
+        "# Funktion zur Abfrage des Modells und Speicherung der Konfiguration",
+        "def setup_initial_config():",
+        "    # Prüfen, ob die Konfigurationsdatei bereits existiert",
+        "    if os.path.exists(arguments.config_path):",
+        "        print(\"Konfiguration existiert bereits. Keine Änderungen nötig.\")",
+        "        return",
+        "",
+        "    # Modellauswahl abfragen",
+        "    print(\"Willkommen zur Installation! Bitte wählen Sie ein Ollama-Modell aus:\")",
+        "    model_name = input(\"Modellname (z. B. 'llama3'): \").strip()",
+        "",
+        "    # Prüfen, ob das Modell verfügbar ist (falls Ollama installiert ist)",
+        "    try:",
+        "        subprocess.run(['ollama', 'list'], check=True, capture_output=True)",
+        "        subprocess.run(['ollama', 'pull', model_name], check=True)",
+        "        print(f\"Modell '{model_name}' wurde erfolgreich heruntergeladen.\")",
+        "    except subprocess.CalledProcessError as e:",
+        "        print(f\"Fehler beim Herunterladen des Modells: {e}\")",
+        "        print(\"Bitte stellen Sie sicher, dass Ollama installiert ist und das Modell verfügbar ist.\")",
+        "",
+        "    # Konfiguration speichern",
+        "    config = {",
+        "        \"model\": model_name,",
+        "        \"first_run\": True",
+        "    }",
+        "",
+        "    with open(arguments.config_path, 'w') as f:",
+        "        json.dump(config, f, indent=4)",
+        "    print(f\"Konfiguration gespeichert unter: {os.path.abspath(arguments.config_path)}\")",
+        "",
+        "if __name__ == \"__main__\":",
+        "    setup_initial_config()"
+      ]
+    }
+  ],
+  "plan_queue": [
+    "2. **UI-Grundgerüst finalisieren**: Hauptfenster mit Ordner-Explorer (links) und Chat-Interface (rechts) in **Tkinter** implementieren, um eine plattformübergreifende Desktop-App zu ermöglichen.",
+    "3. **Ordner-Explorer mit Baumansicht**: Integration einer Baumansicht für Dateisystem-Navigation mit Drag-and-Drop-Unterstützung für Ordner/Dateien.",
+    "4. **Chat-Interface mit Ollama-Integration**: Verbindung des Chat-Bereichs mit dem ausgewählten Modell (z. B. `llama3`). Live-Updates bei Auswahländerungen.",
+    "5. **Einstellungen-Menü**: Dialog für Modellauswahl, Pfadkonfiguration und UI-Präferenzen (z. B. Fenstergröße). Speicherung in einer Konfigurationsdatei (JSON).",
+    "6. **Start-Hinweis (Splash-Screen)**: Pop-up oder Banner beim ersten Start mit Modellauswahl und Konfiguration.",
+    "7. **Build-Skript für Desktop-App**: Automatisierte Erstellung einer installierbaren App mit **PyInstaller** (für Python/Tkinter) oder **Electron-Builder** (falls Electron gewählt wird).",
+    "8. **Dokumentation für Nutzer**: Schritt-für-Schritt-Anleitung für die Installation auf anderen Maschinen (inkl. Abhängigkeiten wie Python/Ollama)."
+  ]
+}

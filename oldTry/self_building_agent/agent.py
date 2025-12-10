@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+import traceback
 from dataclasses import dataclass, asdict
 from typing import Dict, Any, List, Tuple, Callable
 
@@ -13,7 +14,9 @@ import tools
 ENCODING = "utf-8-sig"
 STATE_PATH = os.path.join(os.path.dirname(__file__), "agent_state.json")
 PROMPT_PATH = os.path.join(os.path.dirname(__file__), "prompts", "base_system_prompt.txt")
+VALIDATOR_PROMPT_PATH = os.path.join(os.path.dirname(__file__), "prompts", "validator_system_prompt.txt")
 DEFAULT_MODEL = os.environ.get("AGENT_MODEL", "ministral-3:14b")
+VALIDATOR_MODEL = os.environ.get("VALIDATOR_MODEL", DEFAULT_MODEL)
 MAX_AUTO_STEPS = int(os.environ.get("AGENT_MAX_STEPS", "8"))
 
 
@@ -109,11 +112,15 @@ def build_system_prompt(state: AgentState) -> str:
     return base
 
 
-def stream_model(messages: List[Dict[str, str]]) -> str:
+def build_validator_prompt() -> str:
+    return load_text(VALIDATOR_PROMPT_PATH)
+
+
+def stream_model(messages: List[Dict[str, str]], model: str = DEFAULT_MODEL) -> str:
     content_parts: List[str] = []
     try:
         print("Model:", end=" ", flush=True)
-        for chunk in ollama.chat(model=DEFAULT_MODEL, messages=messages, stream=True):
+        for chunk in ollama.chat(model=model, messages=messages, stream=True):
             piece = chunk.get("message", {}).get("content", "")
             if piece:
                 content_parts.append(piece)
@@ -182,7 +189,14 @@ def handle_action(reply: ModelReply, state: AgentState) -> Dict[str, Any]:
         tool = TOOLS.get(tool_name)
         if not tool:
             return {"success": False, "message": f"Unknown tool {tool_name}", "error": ""}
-        return tool(**args)
+        try:
+            return tool(**args)
+        except Exception:
+            return {
+                "success": False,
+                "message": f"Tool {tool_name} raised",
+                "error": traceback.format_exc(),
+            }
     if mode == "define_tool":
         meta = reply.action.get("new_tool")
         append_result = None
@@ -215,6 +229,28 @@ def next_user_message(executed_step: str, remaining_plan: List[str], action_resu
     )
 
 
+def call_validator(executed_step: str, action_result: Dict[str, Any], raw_model_text: str) -> Dict[str, Any]:
+    prompt = build_validator_prompt()
+    payload = {
+        "step": executed_step,
+        "action_result": action_result,
+        "model_raw": raw_model_text,
+    }
+    messages = [
+        {"role": "system", "content": prompt},
+        {"role": "user", "content": json.dumps(payload)},
+    ]
+    raw_reply = stream_model(messages, model=VALIDATOR_MODEL)
+    try:
+        extracted = extract_json_content(raw_reply)
+        data = json.loads(extracted)
+        if not isinstance(data, dict):
+            raise ValueError("Validator reply is not a dict")
+        return data
+    except Exception as exc:
+        return {"approved": False, "reason": f"Validator parse failed: {exc}", "next_prompt": ""}
+
+
 def run_agent_cycle(state: AgentState, initial_user_input: str) -> None:
     user_message = initial_user_input
     for _ in range(MAX_AUTO_STEPS):
@@ -244,8 +280,12 @@ def run_agent_cycle(state: AgentState, initial_user_input: str) -> None:
             state.project_summary = reply.summaries.get("project_summary", state.project_summary)
             state.project_keywords = reply.summaries.get("project_keywords", state.project_keywords)
 
-        # Advance plan queue after action
-        if state.plan_queue:
+        # Validate step outcome via secondary agent
+        validator_result = call_validator(executed_step, action_result, raw_text)
+        approved = validator_result.get("approved", False)
+
+        # Advance plan queue only if approved
+        if approved and state.plan_queue:
             state.plan_queue = state.plan_queue[1:]
 
         state.save(STATE_PATH)
@@ -255,15 +295,23 @@ def run_agent_cycle(state: AgentState, initial_user_input: str) -> None:
         print("Remaining plan queue:", remaining_plan)
         print("Action:", reply.action.get("mode"), reply.action.get("tool_name", ""))
         print("Tool result:", action_result)
+        print("Validator:", validator_result)
         print("Self-review:", reply.self_review)
         print("Summaries updated.")
         print("Raw model text length:", len(raw_text))
         print("-" * 40)
 
-        if not remaining_plan and reply.action.get("mode") == "none":
+        if not remaining_plan and reply.action.get("mode") == "none" and approved:
             break
 
-        user_message = next_user_message(executed_step, remaining_plan, action_result)
+        if approved:
+            user_message = next_user_message(executed_step, remaining_plan, action_result)
+        else:
+            user_message = validator_result.get("next_prompt") or (
+                f"Step '{executed_step}' failed validation. "
+                f"Reason: {validator_result.get('reason', '')}. "
+                f"Action result: {action_result}"
+            )
     else:
         print(f"Stopped after {MAX_AUTO_STEPS} automatic steps to avoid loops.")
 
