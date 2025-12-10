@@ -50,7 +50,7 @@ Bedeutung der Felder:
 
 - actions:
   - Liste geplanter Funktionsaufrufe.
-  - "tool_name": Name der Funktion, die in tools.py existiert oder von dir neu vorgeschlagen wird.
+  - "tool_name": Name der Funktion, die in tools.py und tools.json existiert oder von dir neu vorgeschlagen wird.
   - "args": JSON-Objekt mit konkreten Argumenten, z. B.:
     { "filepath": "data/input.json", "max_items": 10 }
 

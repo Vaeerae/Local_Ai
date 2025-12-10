@@ -32,7 +32,8 @@ Antworte IMMER in strikt gültigem JSON mit diesem Schema (ohne weiteren Text):
 {
   "approved": false,
   "reason": "",
-  "fix_prompt": ""
+  "fix_prompt": "",
+  
 }
 
 Bedeutung der Felder:

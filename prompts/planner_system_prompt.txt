@@ -31,10 +31,6 @@ Antworte IMMER in strikt gültigem JSON nach folgendem Schema (ohne Kommentare, 
     "Vollständiger Rollenprompt für den Executor zu Planpunkt 1 …",
     "Vollständiger Rollenprompt für den Executor zu Planpunkt 2 …"
   ],
-  "project_infos": [
-    "Stichpunkt 1 …",
-    "Stichpunkt 2 …"
-  ]
 }
 
 Bedeutung der Felder:
@@ -69,13 +65,6 @@ Bedeutung der Felder:
 - user_message:
   - Kurze, verständliche Status-Nachricht für den menschlichen User.
   - Z. B.: "Ich habe einen 4-Schritte-Plan erstellt und Prompts für den Executor vorbereitet."
-
-- project_infos:
-  - Stichpunktartige technische Notizen:
-    - genutzte Technologien,
-    - Konventionen (z. B. Funktionsnamen, Dateistruktur),
-    - wichtige Entscheidungen,
-    - Dinge, auf die weitere Agenten achten sollen.
 
 WICHTIG:
 - KEINEN Code ausführen.

@@ -1,0 +1,20 @@
+﻿[
+  {
+    "nameTool": "generate_file",
+    "beschreib": "Kann eine Datei /File erstellen mit dem angegebenen Inhalt.",
+    "args": "file_name (string): Name der zu erstellenden Datei. content (string): Inhalt der Datei.",
+    "ergebniss": "Antwort True, wenn die Datei erfolgreich erstellt wurde, sonst False."
+  },
+  {
+    "nameTool": "append_funktion_in_file",
+    "beschreib": "Soll eine Funktion / Tool einem bereits existierenden Python-Datei hinzufügen.",
+    "args": "file_name (string): Name der zu anhängender Datei. content (string): Inhalt der Datei.",
+    "ergebniss": "Antwort True, wenn die Datei erfolgreich angehängt wurde, sonst False."
+  },
+  {
+    "nameTool": "read_files",
+    "beschreib": "Soll Dateien Lesen und deren Inhalt zurückgeben.",
+    "args": "file_name (string): Name der zu lesenden Datei.",
+    "ergebniss": "Antwort True, wenn die Datei erfolgreich gelesen wurde, sonst False."
+  }
+]

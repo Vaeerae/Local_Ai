@@ -16,7 +16,7 @@ STATE_PATH = os.path.join(BASE_DIR, "agent_state.json")
 TOOLS_META_PATH = os.path.join(BASE_DIR, "tools.json")
 TOOLS_PY_PATH = os.path.join(BASE_DIR, "tools.py")
 
-DEFAULT_MODEL = os.environ.get("AGENT_MODEL", "ministral-3:14b")
+DEFAULT_MODEL = os.environ.get("AGENT_MODEL", "qwen3-vl:8b")
 EXECUTOR_MODEL = os.environ.get("EXECUTOR_MODEL", DEFAULT_MODEL)
 VALIDATOR_MODEL = os.environ.get("VALIDATOR_MODEL", DEFAULT_MODEL)
 
@@ -257,13 +257,18 @@ def load_tool_functions() -> Dict[str, Any]:
 
 
 def append_new_tools(new_tools: List[Dict[str, Any]]) -> None:
-    """Fügt neue Tools zu tools.py und tools.json hinzu."""
+    """
+    Persistiert vom Executor vorgeschlagene Tools in tools.json und tools.py.
+    - tools.json: Metadaten werden angehängt, aber nur wenn der Name nicht bereits existiert.
+    - tools.py: Python-Code wird angehängt, Registry-Eintrag wird gesetzt.
+    """
     if not new_tools:
         return
 
     ensure_tools_files_exist()
 
     meta = load_tools_meta()
+    existing_names = {t.get("nameTool") for t in meta}
 
     with safe_open(TOOLS_PY_PATH, "a") as f_py:
         for tool in new_tools:
@@ -272,14 +277,18 @@ def append_new_tools(new_tools: List[Dict[str, Any]]) -> None:
             if not name or not code:
                 continue
 
-            meta_entry = {
-                "nameTool": tool.get("nameTool", ""),
-                "beschreib": tool.get("beschreib", ""),
-                "args": tool.get("args", ""),
-                "ergebniss": tool.get("ergebniss", ""),
-            }
-            meta.append(meta_entry)
+            # Metadaten nur ergänzen, wenn der Name noch nicht existiert
+            if name not in existing_names:
+                meta_entry = {
+                    "nameTool": name,
+                    "beschreib": tool.get("beschreib", ""),
+                    "args": tool.get("args", ""),
+                    "ergebniss": tool.get("ergebniss", ""),
+                }
+                meta.append(meta_entry)
+                existing_names.add(name)
 
+            # Code in tools.py anhängen
             f_py.write("\n\n")
             f_py.write(code.strip())
             f_py.write("\n")
