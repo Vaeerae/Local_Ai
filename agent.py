@@ -16,7 +16,7 @@ STATE_PATH = os.path.join(BASE_DIR, "agent_state.json")
 TOOLS_META_PATH = os.path.join(BASE_DIR, "tools.json")
 TOOLS_PY_PATH = os.path.join(BASE_DIR, "tools.py")
 
-DEFAULT_MODEL = os.environ.get("AGENT_MODEL", "qwen3-vl:8b")
+DEFAULT_MODEL = os.environ.get("AGENT_MODEL", "ministral-3:14b")
 EXECUTOR_MODEL = os.environ.get("EXECUTOR_MODEL", DEFAULT_MODEL)
 VALIDATOR_MODEL = os.environ.get("VALIDATOR_MODEL", DEFAULT_MODEL)
 
