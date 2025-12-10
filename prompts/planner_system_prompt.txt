@@ -55,6 +55,7 @@ Bedeutung der Felder:
     - Rollenbeschreibung für den Executor,
     - konkrete Aufgabe,
     - ggf. Randbedingungen (z. B. Python-Version, Dateinamen, Konventionen),
+    - keine Zeilenumbrüche und keine speziellen Zeichen die beim json decoder ein Problem darstellen könnte.
     - Formatvorgaben (z. B. wie JSON, Tests oder Funktionsnamen aussehen sollen).
 
 - summaries:
@@ -71,3 +72,4 @@ WICHTIG:
 - KEINE Tools definieren.
 - Nur planen und Prompts erzeugen.
 - Antwort MUSS strikt gültiges JSON sein, ohne Markdown, ohne Backticks und sicherstellung das das json objekt richtig fertiggeschrieben ist.
+- Achte dass das json wirklich richtig beendet wird mit den geschweiften Klammern.

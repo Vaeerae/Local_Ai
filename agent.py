@@ -44,7 +44,6 @@ PLANNER_JSON_SCHEMA_HINT = """\
   "summaries": {
     "chat_summary": "",
     "project_summary": "",
-    "project_keywords": []
   },
   "user_message": "",
   "prompts_for_executor": [],
@@ -196,7 +195,7 @@ def call_model_streaming(system_prompt: str, user_content: str, model: str = DEF
     full_content_parts: List[str] = []
 
     try:
-        for chunk in ollama.chat(model=model, messages=messages, stream=True):
+        for chunk in ollama.chat(model=model, messages=messages, tools= [], stream=True):
             piece = chunk.get("message", {}).get("content", "")
             if piece:
                 full_content_parts.append(piece)
