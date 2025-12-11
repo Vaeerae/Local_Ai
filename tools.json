@@ -1,20 +1,39 @@
 ﻿[
   {
-    "nameTool": "generate_file",
-    "beschreib": "Kann eine Datei /File erstellen mit dem angegebenen Inhalt.",
-    "args": "file_name (string): Name der zu erstellenden Datei. content (string): Inhalt der Datei.",
-    "ergebniss": "Antwort True, wenn die Datei erfolgreich erstellt wurde, sonst False."
-  },
-  {
-    "nameTool": "append_funktion_in_file",
-    "beschreib": "Soll eine Funktion / Tool einem bereits existierenden Python-Datei hinzufügen.",
-    "args": "file_name (string): Name der zu anhängender Datei. content (string): Inhalt der Datei.",
-    "ergebniss": "Antwort True, wenn die Datei erfolgreich angehängt wurde, sonst False."
-  },
-  {
-    "nameTool": "read_files",
-    "beschreib": "Soll Dateien Lesen und deren Inhalt zurückgeben.",
-    "args": "file_name (string): Name der zu lesenden Datei.",
-    "ergebniss": "Antwort True, wenn die Datei erfolgreich gelesen wurde, sonst False."
+    "nameTool": "create_architecture_json",
+    "beschreib": "Erstellt ein strukturiertes JSON-Dokument mit der Architektur- und Komponentenübersicht der Anwendung basierend auf den vorgegebenen Schlüsseln.",
+    "args": {
+      "output_path": "docs/architecture_plan.json",
+      "structure": {
+        "UI-Komponenten": {
+          "folder_tree": "",
+          "chat_interface": "",
+          "installation_dialog": "",
+          "settings_dialog": ""
+        },
+        "Backend-Komponenten": {
+          "ollama_integration": "",
+          "config_manager": "",
+          "installation_checker": ""
+        },
+        "Dateistruktur": {
+          "project_root": "",
+          "src": {
+            "ui": "",
+            "backend": "",
+            "utils": ""
+          }
+        },
+        "Abhängigkeiten": {
+          "requirements.txt": "",
+          "ollama_api": ""
+        },
+        "Installationsprozess": {
+          "pyinstaller_command": "",
+          "post_install_guide": ""
+        }
+      }
+    },
+    "ergebniss": "Erfolgreich erstelltes JSON-Dokument mit vollständiger Architektur- und Komponentenübersicht."
   }
 ]

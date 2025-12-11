@@ -1,6 +1,41 @@
 ﻿{
-  "chat_summary": "",
-  "project_summary": "",
-  "project_keywords": [],
-  "project_infos": []
+  "user_prompt": "Schreibe eine UI die genutzt wird um dich mit ordnern und dessen inhalt in verbindung zu setzten. es soll eine art ordnerwindow sein mit dir als chat auf der rechten seite. schreibe alles so, dass man am schluss ein desktoppapp erstellen kann und dich auch auf andern maschinen installieren kann. es soll zuerst eine installationsanleitung geben bei der man das startmodell eingeben kann. es kann dann später auch in den einstellungen geändert werden. es soll es soll auch beim start darauf hingewiesen werden, dass ollama installiert werden muss und ein modell installiert.",
+  "chat_summary": "Installationsanleitung und Setup-Skript für Ollama-Integration erstellt. Fokus auf Voraussetzungen (Ollama-Installation) und automatisierte Abhängigkeitsinstallation.",
+  "project_summary": "Desktop-App mit Ordner-Chat-UI: Installationsvorbereitung abgeschlossen (Ollama-Hinweis, Konfiguration, Skripte). Nächste Schritte: UI-Grundgerüst und Ollama-Backend.",
+  "project_keywords": [
+    "Desktop-App",
+    "PyQt6",
+    "Ollama-Integration",
+    "Ordner-Explorer",
+    "Chat-Interface",
+    "Multi-Plattform",
+    "PyInstaller",
+    "Konfigurationsdatei",
+    "Modellauswahl",
+    "Installationsskript",
+    "setup.sh",
+    "setup.bat",
+    "requirements.txt",
+    "config.json"
+  ],
+  "project_infos": [
+    "Ollama-Installation ist **Pflichtvoraussetzung** und muss explizit in der UI/Installation hervorgehoben werden.",
+    "Standardmodell (`default_model`) wird in `config.json` gespeichert und kann über Einstellungen geändert werden.",
+    "Setup-Skript überprüft automatisch Python- und Ollama-Installation (Fehlermeldung bei Missing).",
+    "Abhängigkeiten: `ollama` (Python-Binding), `PyQt6` (UI), `python-dotenv` (Konfiguration).",
+    "Paketierung erfolgt später mit PyInstaller (Plattform-spezifische Binaries).",
+    "Installationsanleitung wird in `docs/installation.md` gespeichert und verlinkt Skripte (`setup.sh`/`setup.bat`)."
+  ],
+  "plan": [
+    "Installationsanleitung und Setup-Skript erstellen (inkl. Ollama-Installationshinweis und Modellauswahl)",
+    "Grundgerüst der UI mit Ordner-Explorer (links) und Chat-Interface (rechts) designen und implementieren",
+    "Backend für Ollama-Integration und Modellauswahl einrichten (inkl. Einstellungen für Startmodell)",
+    "Funktionalität zur Verknüpfung von Ordnerinhalten mit Chat-Interface implementieren (z. B. Dateien als Prompts oder Kontext)",
+    "Desktop-App-Paketierung (z. B. mit PyInstaller oder ähnlichem) vorbereiten und Installationsskript anpassen",
+    "Testphase: UI, Ollama-Integration und Modellwechsel prüfen, Fehler beheben",
+    "Dokumentation für Nutzer und Entwickler erstellen (Installation, Nutzung, Anpassung)",
+    "Finale Paketierung und Freigabe für Multi-Plattform-Installation (Windows, macOS, Linux)"
+  ],
+  "plan_position": 0,
+  "context_log": []
 }
