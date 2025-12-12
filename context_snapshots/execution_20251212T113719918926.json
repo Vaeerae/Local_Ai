@@ -1,0 +1,32 @@
+{
+  "context_version": "1.0",
+  "created_at": "2025-12-12 11:37:19.908983",
+  "step_id": "7d784685-b642-4f55-b20b-5d953956260d",
+  "plan_id": "b74c4f66-97be-4e79-90ae-346efe53ea32",
+  "task_id": "60cace1e-e811-4e30-9a49-6fcebdc272cb",
+  "prompt": {
+    "context_version": "1.0",
+    "created_at": "2025-12-12 11:37:19.842803",
+    "step_id": "7d784685-b642-4f55-b20b-5d953956260d",
+    "plan_id": "b74c4f66-97be-4e79-90ae-346efe53ea32",
+    "task_id": "60cace1e-e811-4e30-9a49-6fcebdc272cb",
+    "prompt": "Step: Verstehe Ziel und Randbedingungen.\nPlan: ['Analyse Aufgabe', 'Implementierung', 'Validierung', 'Review & Abschluss']\nGenerate deterministic code and pytest to fulfill this step.",
+    "tool_hints": [
+      "python"
+    ]
+  },
+  "request": {
+    "code": "def run_task():\n    \"\"\"Deterministic placeholder implementation.\"\"\"\n    return 'ok'\n",
+    "tests": "from task_module import run_task\n\ndef test_run_task():\n    assert run_task() == 'ok'\n",
+    "expected_output": "ok",
+    "working_dir": "storage\\runs"
+  },
+  "result": {
+    "status": "FAILED",
+    "stdout": "",
+    "stderr": "C:\\Users\\user\\AppData\\Local\\Programs\\Python\\Python313\\python.exe: No module named pytest\n",
+    "traceback": null,
+    "exit_code": 1,
+    "test_report": {}
+  }
+}

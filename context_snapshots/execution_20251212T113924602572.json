@@ -1,0 +1,32 @@
+{
+  "context_version": "1.0",
+  "created_at": "2025-12-12 11:39:24.497325",
+  "step_id": "b88cd293-786f-4b8f-b4ab-b2bbda2e7806",
+  "plan_id": "35cc1148-45ce-40ff-b9e8-ebd5633720d0",
+  "task_id": "82052f04-12e8-4c83-875c-7af351b6dc41",
+  "prompt": {
+    "context_version": "1.0",
+    "created_at": "2025-12-12 11:39:23.653567",
+    "step_id": "b88cd293-786f-4b8f-b4ab-b2bbda2e7806",
+    "plan_id": "35cc1148-45ce-40ff-b9e8-ebd5633720d0",
+    "task_id": "82052f04-12e8-4c83-875c-7af351b6dc41",
+    "prompt": "Step: Verstehe Ziel und Randbedingungen.\nPlan: ['Analyse Aufgabe', 'Implementierung', 'Validierung', 'Review & Abschluss']\nGenerate deterministic code and pytest to fulfill this step.",
+    "tool_hints": [
+      "python"
+    ]
+  },
+  "request": {
+    "code": "def run_task():\n    \"\"\"Deterministic placeholder implementation.\"\"\"\n    return 'ok'\n",
+    "tests": "from task_module import run_task\n\ndef test_run_task():\n    assert run_task() == 'ok'\n",
+    "expected_output": "ok",
+    "working_dir": "storage\\runs"
+  },
+  "result": {
+    "status": "PASSED",
+    "stdout": ".                                                                        [100%]\n",
+    "stderr": "",
+    "traceback": null,
+    "exit_code": 0,
+    "test_report": {}
+  }
+}
