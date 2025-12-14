@@ -18,7 +18,8 @@ class PytestRunner:
 
     def run(self, request: ExecutionRequest) -> ExecutionResult:
         run_id = f"run_{uuid4()}"
-        run_dir = self.workspace / run_id
+        base_dir = Path(request.working_dir) if request.working_dir else self.workspace
+        run_dir = base_dir
         tests_dir = run_dir / "tests"
         run_dir.mkdir(parents=True, exist_ok=True)
         tests_dir.mkdir(parents=True, exist_ok=True)

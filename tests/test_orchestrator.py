@@ -21,6 +21,15 @@ class StubRunner:
         )
 
 
+class StubLLM:
+    def __init__(self):
+        self.calls = []
+
+    def generate_json(self, model: str, prompt: str):
+        self.calls.append((model, prompt))
+        return {}
+
+
 def test_orchestrator_min_flow(tmp_path):
     cfg = AppConfig(
         storage_dir=tmp_path / "storage",
@@ -28,7 +37,7 @@ def test_orchestrator_min_flow(tmp_path):
         runner_workspace=tmp_path / "runs",
         tool_dir=tmp_path / "tools",
     )
-    orch = Orchestrator(cfg)
+    orch = Orchestrator(cfg, llm_client=StubLLM())
     orch.runner = StubRunner(cfg.runner_workspace)
 
     result = orch.run("Einfacher Testtask")

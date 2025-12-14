@@ -20,6 +20,7 @@ class ModelConfig(BaseModel):
 
     intake: str = Field(default="llama3")
     planner: str = Field(default="llama3")
+    research: str = Field(default="llama3")
     decomposer: str = Field(default="llama3")
     prompter: str = Field(default="llama3")
     executor: str = Field(default="llama3")
@@ -46,6 +47,8 @@ class AppConfig(BaseSettings):
     context_snapshot_dir: Path = Field(default=Path("context_snapshots"))
     tool_dir: Path = Field(default=Path("tools"))
     runner_workspace: Path = Field(default=Path("storage") / "runs")
+    ollama_host: str = Field(default="http://localhost:11434")
+    ollama_timeout: int = Field(default=60)
     allowed_tool_permissions: List[str] = Field(
         default_factory=lambda: ["python", "shell"]
     )
@@ -59,6 +62,7 @@ class AppConfig(BaseSettings):
         return {
             "intake": self.models.intake,
             "planner": self.models.planner,
+            "research": self.models.research,
             "decomposer": self.models.decomposer,
             "prompter": self.models.prompter,
             "executor": self.models.executor,

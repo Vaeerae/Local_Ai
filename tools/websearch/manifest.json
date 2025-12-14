@@ -1,0 +1,23 @@
+{
+  "name": "websearch",
+  "version": "0.1.0",
+  "entrypoint": "tools.websearch:run",
+  "input_schema": {
+    "type": "object",
+    "properties": {
+      "query": {"type": "string"},
+      "limit": {"type": "integer", "default": 1024}
+    },
+    "required": ["query"]
+  },
+  "output_schema": {
+    "type": "object",
+    "properties": {
+      "url": {"type": "string"},
+      "content": {"type": "string"}
+    },
+    "required": ["url", "content"]
+  },
+  "permissions": ["http"],
+  "tests": []
+}

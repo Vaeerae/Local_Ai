@@ -11,6 +11,7 @@ dependencies = [
   "pydantic>=2.6",
   "pydantic-settings>=2.2",
   "typing_extensions>=4.9",
+  "ollama>=0.1.0",
 ]
 authors = [{name = "Local AI"}]
 

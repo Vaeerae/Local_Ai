@@ -1,0 +1,32 @@
+{
+  "context_version": "1.0",
+  "created_at": "2025-12-12 14:03:04.382496",
+  "step_id": "b600425e-ef45-439a-9165-adc29cf3ef8c",
+  "plan_id": "4d2203e5-9673-481f-9223-dbe5f0bab2b8",
+  "task_id": "6ce5fa9c-28b6-4092-9a31-b5eae2fedb0c",
+  "prompt": {
+    "context_version": "1.0",
+    "created_at": "2025-12-12 14:00:15.371994",
+    "step_id": "b600425e-ef45-439a-9165-adc29cf3ef8c",
+    "plan_id": "4d2203e5-9673-481f-9223-dbe5f0bab2b8",
+    "task_id": "6ce5fa9c-28b6-4092-9a31-b5eae2fedb0c",
+    "prompt": "Step: Verstehe Ziel und Randbedingungen.\nPlan: ['Analyse Aufgabe', 'Implementierung', 'Validierung', 'Review & Abschluss']\nGenerate deterministic code and pytest to fulfill this step.",
+    "tool_hints": [
+      "python"
+    ]
+  },
+  "request": {
+    "code": "def run_task(path: str = 'output.txt', content: str = 'ok'):\n    \"\"\"Write content to a file and return path.\"\"\"\n    with open(path, 'w', encoding='utf-8') as f:\n        f.write(content)\n    return path\n",
+    "tests": "from task_module import run_task\n\ndef test_run_task(tmp_path):\n    target = tmp_path / 'output.txt'\n    p = run_task(str(target), 'ok')\n    assert target.read_text(encoding='utf-8') == 'ok'\n    assert p.endswith('output.txt')\n",
+    "expected_output": "output.txt",
+    "working_dir": "C:\\Users\\user\\Desktop\\Privat\\python\\Local_Ai"
+  },
+  "result": {
+    "status": "PASSED",
+    "stdout": "..                                                                       [100%]\n============================== warnings summary ===============================\ntests/test_orchestrator.py: 27 warnings\n  C:\\Users\\user\\Desktop\\Privat\\python\\Local_Ai\\.venv\\Lib\\site-packages\\pydantic\\main.py:250: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)\n\ntests/test_orchestrator.py::test_orchestrator_min_flow\ntests/test_orchestrator.py::test_orchestrator_min_flow\ntests/test_orchestrator.py::test_orchestrator_min_flow\ntests/test_orchestrator.py::test_orchestrator_min_flow\ntests/test_orchestrator.py::test_orchestrator_min_flow\ntests/test_orchestrator.py::test_orchestrator_min_flow\ntests/test_orchestrator.py::test_orchestrator_min_flow\n  C:\\Users\\user\\Desktop\\Privat\\python\\Local_Ai\\storage\\snapshots.py:17: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).\n    timestamp = datetime.utcnow().strftime(\"%Y%m%dT%H%M%S%f\")\n\n-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html\n",
+    "stderr": "",
+    "traceback": null,
+    "exit_code": 0,
+    "test_report": {}
+  }
+}

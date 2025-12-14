@@ -10,6 +10,7 @@ from context.models import (
     ReviewContext,
     ReviewDecision,
 )
+from prompts import build_prompt
 
 
 class ReviewerInput(BaseModel):
@@ -17,8 +18,8 @@ class ReviewerInput(BaseModel):
 
 
 class ReviewerAgent(Agent[ReviewerInput, ReviewContext]):
-    def __init__(self, model_name: str) -> None:
-        super().__init__("ReviewerAgent", model_name)
+    def __init__(self, model_name: str, llm_client=None, stream_callback=None) -> None:
+        super().__init__("ReviewerAgent", model_name, llm_client=llm_client, stream_callback=stream_callback)
 
     def run(self, data: ReviewerInput) -> ReviewContext:
         execution = data.execution
@@ -35,12 +36,32 @@ class ReviewerAgent(Agent[ReviewerInput, ReviewContext]):
                 )
             )
 
+        recommendations: list[str] = []
+        if self.llm_client:
+            try:
+                resp = self.llm_client.generate_json(
+                    self.model_name,
+                    build_prompt(
+                        "reviewer",
+                        (
+                            "Analysiere Testergebnisse und gib Empfehlungen als JSON.\n"
+                            f"stdout:\n{execution.result.stdout}\n"
+                            f"stderr:\n{execution.result.stderr}\n"
+                            'Schema: { "recommendations": ["string"] }'
+                        ),
+                    ),
+                    chunk_callback=self._stream_chunk,
+                )
+                recommendations = resp.get("recommendations", [])
+            except Exception:
+                recommendations = []
+
         return ReviewContext(
             step_id=execution.step_id,
             plan_id=execution.plan_id,
             task_id=execution.task_id,
             decision=decision,
             issues=issues,
-            recommendations=[],
+            recommendations=recommendations,
             evidence={"stdout": execution.result.stdout, "stderr": execution.result.stderr},
         )

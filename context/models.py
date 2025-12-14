@@ -84,13 +84,14 @@ class PromptContext(BaseContext):
     task_id: str
     prompt: str
     tool_hints: List[str] = Field(default_factory=list)
+    language: str = "de"
 
 
 class ExecutionRequest(BaseModel):
     code: str
     tests: str
     expected_output: Optional[str] = None
-    working_dir: Path = Field(default_factory=lambda: Path("storage") / "runs")
+    working_dir: Path = Field(default_factory=Path.cwd)
 
     model_config = {"extra": "forbid"}
 
@@ -106,6 +107,22 @@ class ExecutionResult(BaseModel):
     model_config = {"extra": "forbid"}
 
 
+class ToolResult(BaseModel):
+    name: str
+    stdout: str = ""
+    stderr: str = ""
+    artifacts: List[Path] = Field(default_factory=list)
+
+    model_config = {"extra": "forbid"}
+
+
+class ResearchFinding(BaseModel):
+    source: str
+    content: str
+
+    model_config = {"extra": "forbid"}
+
+
 class ExecutionContext(BaseContext):
     step_id: str
     plan_id: str
@@ -113,6 +130,8 @@ class ExecutionContext(BaseContext):
     prompt: PromptContext
     request: ExecutionRequest
     result: ExecutionResult = Field(default_factory=ExecutionResult)
+    tool_outputs: List[ToolResult] = Field(default_factory=list)
+    research_findings: List[ResearchFinding] = Field(default_factory=list)
 
 
 class Issue(BaseModel):

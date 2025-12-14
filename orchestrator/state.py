@@ -11,6 +11,7 @@ class OrchestratorState(str, Enum):
     PLAN = "PLAN"
     STEP_LOOP = "STEP_LOOP"
     DECOMPOSE = "DECOMPOSE"
+    RESEARCH = "RESEARCH"
     PROMPT_BUILD = "PROMPT_BUILD"
     EXECUTE = "EXECUTE"
     RUN_CODE = "RUN_CODE"

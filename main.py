@@ -12,25 +12,32 @@ from ui.app import run_ui
 def main() -> int:
     parser = argparse.ArgumentParser(description="Local multi-agent orchestrator")
     parser.add_argument("task", nargs="*", help="Task description")
-    parser.add_argument(
-        "--ui",
-        action="store_true",
-        help="Start the PySide6 UI after the run",
-    )
     args = parser.parse_args()
 
     task_description = " ".join(args.task) if args.task else "Implement placeholder task"
-    orchestrator = Orchestrator(AppConfig())
-    result = orchestrator.run(task_description)
-    print(json.dumps(result, indent=2, ensure_ascii=True, default=str))
-
-    if args.ui:
+    app_cfg = AppConfig()
+    orchestrator = Orchestrator(app_cfg)
+    plan_steps = []
+    status = "Bereit"
+    if args.task:
+        result = orchestrator.run(task_description)
+        print(json.dumps(result, indent=2, ensure_ascii=True, default=str))
         status = f"{len(result.get('plan', {}).get('steps', []))} steps processed"
-        try:
-            run_ui(orchestrator.config.project_name, status_text=status)
-        except RuntimeError as exc:
-            print(f"UI konnte nicht gestartet werden: {exc}", file=sys.stderr)
-            return 1
+        plan_steps = [s.get("title") for s in result.get("plan", {}).get("steps", [])]
+    try:
+        run_ui(
+            orchestrator.config.project_name,
+            status_text=status,
+            workspace_path=orchestrator.config.ui.workspace_path,
+            task_description=task_description,
+            plan_steps=plan_steps,
+            language=orchestrator.config.language,
+            models=orchestrator.config.models.model_dump(),
+            orchestrator=orchestrator,
+        )
+    except RuntimeError as exc:
+        print(f"UI konnte nicht gestartet werden: {exc}", file=sys.stderr)
+        return 1
     return 0
 
 

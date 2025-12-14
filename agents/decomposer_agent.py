@@ -12,8 +12,8 @@ class DecomposerInput(BaseModel):
 
 
 class DecomposerAgent(Agent[DecomposerInput, StepContext]):
-    def __init__(self, model_name: str) -> None:
-        super().__init__("DecomposerAgent", model_name)
+    def __init__(self, model_name: str, llm_client=None, stream_callback=None) -> None:
+        super().__init__("DecomposerAgent", model_name, llm_client=llm_client, stream_callback=stream_callback)
 
     def run(self, data: DecomposerInput) -> StepContext:
         if data.step_index >= len(data.plan.steps):

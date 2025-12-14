@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import Dict, List
+from typing import Callable, Dict, List, Optional
 
 from agents.decomposer_agent import DecomposerAgent, DecomposerInput
 from agents.executor_agent import ExecutorAgent, ExecutorInput
@@ -10,6 +10,7 @@ from agents.intake_agent import IntakeAgent, IntakeInput
 from agents.planner_agent import PlannerAgent, PlannerInput
 from agents.prompter_agent import PrompterAgent, PrompterInput
 from agents.reviewer_agent import ReviewerAgent, ReviewerInput
+from agents.research_agent import ResearchAgent, ResearchInput
 from agents.summarizer_agent import SummarizerAgent, SummarizerInput
 from config.config import AppConfig, resolve_paths
 from context.models import (
@@ -18,11 +19,13 @@ from context.models import (
     PlanContext,
     PromptContext,
     ProjectMemory,
+    ResearchFinding,
     ReviewContext,
     ReviewDecision,
     StepContext,
     TaskContext,
 )
+from llm.ollama_client import OllamaClient
 from orchestrator.events import EventRecord, EventType
 from orchestrator.state import OrchestratorState, StateTracker
 from runner.pytest_runner import PytestRunner
@@ -31,8 +34,17 @@ from storage.snapshots import SnapshotWriter
 from tools.registry import ToolRegistry
 
 
+ProgressCallback = Callable[[str, Dict[str, object]], None]
+
+
 class Orchestrator:
-    def __init__(self, config: AppConfig) -> None:
+    def __init__(
+        self,
+        config: AppConfig,
+        llm_client: OllamaClient | None = None,
+        on_event: Optional[ProgressCallback] = None,
+        on_stream: Optional[ProgressCallback] = None,
+    ) -> None:
         self.config = resolve_paths(config)
         self.state = StateTracker(max_fixes=5)
         self.event_store = EventStore(self.config.storage_dir / "events.db")
@@ -44,15 +56,54 @@ class Orchestrator:
             workspace=self.config.runner_workspace, timeout_seconds=self.config.pytest_timeout_seconds
         )
         models = self.config.as_agent_config()
-        self.intake_agent = IntakeAgent(models["intake"])
-        self.planner_agent = PlannerAgent(models["planner"])
-        self.decomposer_agent = DecomposerAgent(models["decomposer"])
-        self.prompter_agent = PrompterAgent(models["prompter"])
-        self.executor_agent = ExecutorAgent(models["executor"])
-        self.reviewer_agent = ReviewerAgent(models["reviewer"])
-        self.fix_manager_agent = FixManagerAgent(models["fix_manager"])
-        self.summarizer_agent = SummarizerAgent(models["summarizer"])
+        self.llm_client = llm_client or OllamaClient(
+            host=self.config.ollama_host, timeout=self.config.ollama_timeout
+        )
+        self.on_event = on_event
+        self.on_stream = on_stream
+        self.intake_agent = IntakeAgent(
+            models["intake"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.planner_agent = PlannerAgent(
+            models["planner"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.decomposer_agent = DecomposerAgent(
+            models["decomposer"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.prompter_agent = PrompterAgent(
+            models["prompter"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.executor_agent = ExecutorAgent(
+            models["executor"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.reviewer_agent = ReviewerAgent(
+            models["reviewer"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.fix_manager_agent = FixManagerAgent(
+            models["fix_manager"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.summarizer_agent = SummarizerAgent(
+            models["summarizer"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
+        self.research_agent = ResearchAgent(
+            models["research"], llm_client=self.llm_client, stream_callback=self.on_stream
+        )
         self.memory = ProjectMemory()
+
+    def set_stream_callback(self, cb: Optional[ProgressCallback]) -> None:
+        self.on_stream = cb
+        for agent in (
+            self.intake_agent,
+            self.planner_agent,
+            self.decomposer_agent,
+            self.research_agent,
+            self.prompter_agent,
+            self.executor_agent,
+            self.reviewer_agent,
+            self.fix_manager_agent,
+            self.summarizer_agent,
+        ):
+            agent.stream_callback = cb
 
     def run(self, task_description: str) -> Dict[str, object]:
         task_ctx = self._intake(task_description)
@@ -62,9 +113,10 @@ class Orchestrator:
         for idx, step in enumerate(plan_ctx.steps):
             self.state.active_step_id = step.step_id
             step_ctx = self._decompose(plan_ctx, idx)
-            prompt_ctx = self._prompt(step_ctx, plan_ctx)
-            exec_request = self._execute(step_ctx, prompt_ctx)
-            execution_ctx = self._run_code(step_ctx, plan_ctx, prompt_ctx, exec_request)
+            research = self._research(task_ctx, plan_ctx, step_ctx)
+            prompt_ctx = self._prompt(task_ctx, step_ctx, plan_ctx, research)
+            exec_request = self._execute(step_ctx, prompt_ctx, research)
+            execution_ctx = self._run_code(step_ctx, plan_ctx, prompt_ctx, exec_request, research)
             review_ctx = self._review(execution_ctx)
 
             if review_ctx.decision != ReviewDecision.APPROVED:
@@ -101,18 +153,40 @@ class Orchestrator:
         self.state.next(OrchestratorState.DECOMPOSE)
         return self.decomposer_agent.run(DecomposerInput(plan=plan, step_index=step_index))
 
-    def _prompt(self, step: StepContext, plan: PlanContext) -> PromptContext:
+    def _research(self, task: TaskContext, plan: PlanContext, step: StepContext) -> List[ResearchFinding]:
+        self.state.next(OrchestratorState.RESEARCH)
+        output = self.research_agent.run(
+            ResearchInput(
+                task_description=task.description,
+                step_summary=step.summary,
+                plan_titles=[s.title for s in plan.steps],
+                language=task.language,
+                prior_findings=[],
+            )
+        )
+        return output.findings
+
+    def _prompt(self, task: TaskContext, step: StepContext, plan: PlanContext, findings: List[ResearchFinding]) -> PromptContext:
         self.state.next(OrchestratorState.PROMPT_BUILD)
-        prompt = self.prompter_agent.run(PrompterInput(step=step, plan=plan))
+        prompt = self.prompter_agent.run(
+            PrompterInput(task=task, step=step, plan=plan, findings=findings)
+        )
         return prompt
 
-    def _execute(self, step: StepContext, prompt: PromptContext) -> ExecutionRequest:
+    def _execute(self, step: StepContext, prompt: PromptContext, findings: List[ResearchFinding]) -> ExecutionRequest:
         self.state.next(OrchestratorState.EXECUTE)
-        exec_request = self.executor_agent.run(ExecutorInput(step=step, prompt=prompt))
+        exec_request = self.executor_agent.run(
+            ExecutorInput(step=step, prompt=prompt, findings=findings)
+        )
         return exec_request
 
     def _run_code(
-        self, step: StepContext, plan: PlanContext, prompt: PromptContext, request: ExecutionRequest
+        self,
+        step: StepContext,
+        plan: PlanContext,
+        prompt: PromptContext,
+        request: ExecutionRequest,
+        findings: List[ResearchFinding],
     ) -> ExecutionContext:
         self.state.next(OrchestratorState.RUN_CODE)
         result = self.runner.run(request)
@@ -123,6 +197,7 @@ class Orchestrator:
             prompt=prompt,
             request=request,
             result=result,
+            research_findings=findings,
         )
         payload = {
             "step_id": step.step_id,
@@ -171,3 +246,8 @@ class Orchestrator:
     def _log_event(self, event_type: EventType, payload: Dict[str, object]) -> None:
         event = EventRecord(event_type=event_type, payload=payload)
         self.event_store.append(event)
+        if self.on_event:
+            try:
+                self.on_event(event_type.value, payload)
+            except Exception:
+                pass

@@ -1,0 +1,32 @@
+{
+  "context_version": "1.0",
+  "created_at": "2025-12-12 12:41:00.621850",
+  "step_id": "4a457cc0-1dc9-4cc6-9e63-03a8bb66a25c",
+  "plan_id": "2d74a4c8-ea40-43ee-9c6c-434cc7d1042a",
+  "task_id": "3dbf7696-032d-4ab0-9e9e-9a45be061e30",
+  "prompt": {
+    "context_version": "1.0",
+    "created_at": "2025-12-12 12:40:59.919015",
+    "step_id": "4a457cc0-1dc9-4cc6-9e63-03a8bb66a25c",
+    "plan_id": "2d74a4c8-ea40-43ee-9c6c-434cc7d1042a",
+    "task_id": "3dbf7696-032d-4ab0-9e9e-9a45be061e30",
+    "prompt": "Step: Review, Fixes und Zusammenfassung.\nPlan: ['Analyse Aufgabe', 'Implementierung', 'Validierung', 'Review & Abschluss']\nGenerate deterministic code and pytest to fulfill this step.",
+    "tool_hints": [
+      "python"
+    ]
+  },
+  "request": {
+    "code": "def run_task():\n    \"\"\"Deterministic placeholder implementation.\"\"\"\n    return 'ok'\n",
+    "tests": "from task_module import run_task\n\ndef test_run_task():\n    assert run_task() == 'ok'\n",
+    "expected_output": "ok",
+    "working_dir": "storage\\runs"
+  },
+  "result": {
+    "status": "PASSED",
+    "stdout": ".                                                                        [100%]\n",
+    "stderr": "",
+    "traceback": null,
+    "exit_code": 0,
+    "test_report": {}
+  }
+}
