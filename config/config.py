@@ -18,7 +18,6 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class ModelConfig(BaseModel):
     """Model selection per agent."""
 
-    intake: str = Field(default="llama3")
     planner: str = Field(default="llama3")
     research: str = Field(default="llama3")
     decomposer: str = Field(default="llama3")
@@ -41,12 +40,18 @@ class AppConfig(BaseSettings):
 
     language: str = Field(default="de")
     streaming: bool = Field(default=True)
+    unified_model: bool = Field(default=True)
+    unified_model_name: str = Field(default="llama3")
     models: ModelConfig = Field(default_factory=ModelConfig)
     ui: UISettings = Field(default_factory=UISettings)
+    user_dir: Path = Field(default=Path("User"))
     storage_dir: Path = Field(default=Path("storage"))
     context_snapshot_dir: Path = Field(default=Path("context_snapshots"))
-    tool_dir: Path = Field(default=Path("tools"))
-    runner_workspace: Path = Field(default=Path("storage") / "runs")
+    context_log_dir: Path = Field(default=Path("context_logs"))
+    tool_dir: Path = Field(default=Path("User") / "tools")
+    runner_workspace: Path = Field(default=Path("User") / "dateien")
+    user_infos_dir: Path = Field(default=Path("User") / "infos")
+    user_files_dir: Path = Field(default=Path("User") / "dateien")
     ollama_host: str = Field(default="http://localhost:11434")
     ollama_timeout: int = Field(default=60)
     allowed_tool_permissions: List[str] = Field(
@@ -59,8 +64,18 @@ class AppConfig(BaseSettings):
 
     def as_agent_config(self) -> Dict[str, str]:
         """Expose a minimal mapping for agents to pick their model."""
+        if self.unified_model:
+            return {key: self.unified_model_name for key in [
+                "planner",
+                "research",
+                "decomposer",
+                "prompter",
+                "executor",
+                "reviewer",
+                "fix_manager",
+                "summarizer",
+            ]}
         return {
-            "intake": self.models.intake,
             "planner": self.models.planner,
             "research": self.models.research,
             "decomposer": self.models.decomposer,
@@ -77,11 +92,21 @@ def resolve_paths(cfg: AppConfig) -> AppConfig:
     storage = cfg.storage_dir.resolve()
     snapshots = cfg.context_snapshot_dir.resolve()
     runner_workspace = cfg.runner_workspace.resolve()
+    context_logs = cfg.context_log_dir.resolve()
+    user_dir = cfg.user_dir.resolve()
+    user_infos = cfg.user_infos_dir.resolve()
+    user_files = cfg.user_files_dir.resolve()
+    tool_dir = cfg.tool_dir.resolve()
 
-    for path in (storage, snapshots, runner_workspace, cfg.tool_dir.resolve()):
+    for path in (storage, snapshots, runner_workspace, tool_dir, context_logs, user_dir, user_infos, user_files):
         path.mkdir(parents=True, exist_ok=True)
 
     cfg.storage_dir = storage
     cfg.context_snapshot_dir = snapshots
     cfg.runner_workspace = runner_workspace
+    cfg.context_log_dir = context_logs
+    cfg.user_dir = user_dir
+    cfg.user_infos_dir = user_infos
+    cfg.user_files_dir = user_files
+    cfg.tool_dir = tool_dir
     return cfg

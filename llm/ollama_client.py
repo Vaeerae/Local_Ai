@@ -5,6 +5,7 @@ Lightweight Ollama client wrapper to enforce JSON responses.
 """
 
 import json
+import re
 from typing import Any, Dict, Optional
 
 try:
@@ -17,6 +18,36 @@ class OllamaClient:
     def __init__(self, host: str = "http://localhost:11434", timeout: int = 60) -> None:
         self.client = ollama.Client(host=host, timeout=timeout)
 
+    def _emit_chunks(self, text: str, chunk_callback: Optional[callable]) -> str:
+        """
+        Split thinking blocks (<think>...</think>) from normal text and emit via callback.
+        Returns the cleaned text (without thinking tags).
+        """
+        if not chunk_callback or not text:
+            return text
+
+        cleaned_parts = []
+        pattern = re.compile(r"<think>(.*?)</think>", re.DOTALL)
+        last_end = 0
+        for match in pattern.finditer(text):
+            # preceding normal text
+            if match.start() > last_end:
+                normal = text[last_end:match.start()]
+                if normal.strip():
+                    chunk_callback(normal)
+                    cleaned_parts.append(normal)
+            thinking = match.group(1)
+            if thinking.strip():
+                chunk_callback(f"[thinking] {thinking}")
+            last_end = match.end()
+        # tail
+        if last_end < len(text):
+            tail = text[last_end:]
+            if tail.strip():
+                chunk_callback(tail)
+                cleaned_parts.append(tail)
+        return "".join(cleaned_parts)
+
     def generate_json(
         self, model: str, prompt: str, chunk_callback: Optional[callable] = None
     ) -> Dict[str, Any]:
@@ -24,28 +55,36 @@ class OllamaClient:
         Request a JSON response. If parsing fails, raise a ValueError so callers can fallback.
         """
         text = ""
+        options = {"temperature": 0}
+        if "think" in model.lower():
+            options["thinking"] = True
+
         if chunk_callback:
             stream = self.client.generate(
                 model=model,
                 prompt=prompt,
-                options={"temperature": 0},
+                options=options,
                 stream=True,
             )
             for part in stream:
-                chunk = part.get("response", "")
-                if chunk:
-                    text += chunk
-                    try:
+                chunk = part.get("response", "") or ""
+                text += chunk
+                if chunk_callback and chunk:
+                    cleaned = self._emit_chunks(chunk, chunk_callback)
+                    # if no <think> tags, still emit the raw chunk
+                    if cleaned == chunk:
                         chunk_callback(chunk)
-                    except Exception:
-                        pass
         else:
             response = self.client.generate(
                 model=model,
                 prompt=prompt,
-                options={"temperature": 0},
+                options=options,
             )
-            text = response.get("response", "")
+            text = response.get("response", "") or ""
+            if chunk_callback and text:
+                cleaned = self._emit_chunks(text, chunk_callback)
+                if cleaned == text:
+                    chunk_callback(text)
         try:
             return json.loads(text)
         except json.JSONDecodeError as exc:

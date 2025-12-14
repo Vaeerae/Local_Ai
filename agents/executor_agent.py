@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+import os
 from pydantic import BaseModel
 
 from agents.base import Agent
@@ -24,19 +25,25 @@ class ExecutorAgent(Agent[ExecutorInput, ExecutionRequest]):
         The code should address the prompt, e.g., writing files or running tasks.
         """
         code = (
-            "def run_task(path: str = 'output.txt', content: str = 'ok'):\n"
-            '    """Write content to a file and return path."""\n'
-            "    with open(path, 'w', encoding='utf-8') as f:\n"
-            "        f.write(content)\n"
-            "    return path\n"
+            "from pathlib import Path\n"
+            "import os\n"
+            "\n"
+            "def run_task(filename: str = 'output.txt', content: str = 'ok'):\n"
+            '    \"\"\"Write content to USER_DATA_DIR/filename and return path.\"\"\"\n'
+            "    data_dir = Path(os.environ.get('USER_DATA_DIR', '.'))\n"
+            "    data_dir.mkdir(parents=True, exist_ok=True)\n"
+            "    target = data_dir / filename\n"
+            "    target.write_text(content, encoding='utf-8')\n"
+            "    return str(target)\n"
         )
         tests = (
-            "from task_module import run_task\n\n"
-            "def test_run_task(tmp_path):\n"
-            "    target = tmp_path / 'output.txt'\n"
-            "    p = run_task(str(target), 'ok')\n"
-            "    assert target.read_text(encoding='utf-8') == 'ok'\n"
-            "    assert p.endswith('output.txt')\n"
+            "from task_module import run_task\n"
+            "from pathlib import Path\n"
+            "import os\n\n"
+            "def test_run_task():\n"
+            "    p = Path(run_task('output.txt', 'ok'))\n"
+            "    assert p.read_text(encoding='utf-8') == 'ok'\n"
+            "    assert p.name == 'output.txt'\n"
         )
         expected_output = "output.txt"
 
@@ -44,6 +51,11 @@ class ExecutorAgent(Agent[ExecutorInput, ExecutionRequest]):
             schema_hint = (
                 '{ "code": "python code", "tests": "pytest code", "expected_output": "string" }'
             )
+            extra = [
+                ("Aktueller Planschritt", data.step.summary),
+                ("Prompt vom Prompter", data.prompt.prompt),
+                ("Funde Research", "; ".join(f.content for f in data.findings)),
+            ]
             try:
                 resp = self.llm_client.generate_json(
                     self.model_name,
@@ -57,6 +69,13 @@ class ExecutorAgent(Agent[ExecutorInput, ExecutionRequest]):
                             "Nur kompakten, deterministischen Code, keine Kommentare."
                         ),
                         language=data.prompt.language,
+                        history=[
+                            ("Planner", "siehe Plan oben"),
+                            ("Decomposer", data.step.summary),
+                            ("Research", "; ".join(f.content for f in data.findings)),
+                            ("Prompter", data.prompt.prompt),
+                        ],
+                        infos=[f"{k}: {v}" for k, v in [("Schema", schema_hint)] + [(a, b) for a, b in extra]],
                     ),
                     chunk_callback=self._stream_chunk,
                 )

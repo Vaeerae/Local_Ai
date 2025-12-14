@@ -33,6 +33,7 @@ class FixManagerAgent(Agent[FixManagerInput, FixInstruction]):
                             f"Issues: {[i.detail for i in data.review.issues]}\n"
                             'Schema: { "change_summary": ["string"], "retry": true }'
                         ),
+                        language=data.execution.prompt.language,
                     ),
                     chunk_callback=self._stream_chunk,
                 )

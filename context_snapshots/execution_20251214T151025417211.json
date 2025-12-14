@@ -1,0 +1,35 @@
+{
+  "context_version": "1.0",
+  "created_at": "2025-12-14 15:10:25.406182",
+  "step_id": "73cab850-2b65-45c4-9a9e-040beb4764a4",
+  "plan_id": "08449118-053c-40e2-b1cb-983d1bdd3cf9",
+  "task_id": "16b5ad1f-da75-4cec-9f89-42627039602a",
+  "prompt": {
+    "context_version": "1.0",
+    "created_at": "2025-12-14 15:09:22.465349",
+    "step_id": "73cab850-2b65-45c4-9a9e-040beb4764a4",
+    "plan_id": "08449118-053c-40e2-b1cb-983d1bdd3cf9",
+    "task_id": "16b5ad1f-da75-4cec-9f89-42627039602a",
+    "prompt": "Step: Review, Fixes und Zusammenfassung.\nPlan: ['Analyse Aufgabe', 'Implementierung', 'Validierung', 'Review & Abschluss']\nGenerate deterministic code and pytest to fulfill this step.",
+    "tool_hints": [
+      "python"
+    ],
+    "language": "de"
+  },
+  "request": {
+    "code": "def run_task(path: str = 'output.txt', content: str = 'ok'):\n    \"\"\"Write content to a file and return path.\"\"\"\n    with open(path, 'w', encoding='utf-8') as f:\n        f.write(content)\n    return path\n",
+    "tests": "from task_module import run_task\n\ndef test_run_task(tmp_path):\n    target = tmp_path / 'output.txt'\n    p = run_task(str(target), 'ok')\n    assert target.read_text(encoding='utf-8') == 'ok'\n    assert p.endswith('output.txt')\n",
+    "expected_output": "output.txt",
+    "working_dir": "C:\\Users\\user\\Desktop\\Privat\\python\\Local_Ai\\User\\dateien"
+  },
+  "result": {
+    "status": "PASSED",
+    "stdout": ".                                                                        [100%]\n",
+    "stderr": "",
+    "traceback": null,
+    "exit_code": 0,
+    "test_report": {}
+  },
+  "tool_outputs": [],
+  "research_findings": []
+}

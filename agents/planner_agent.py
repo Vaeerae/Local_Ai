@@ -33,7 +33,11 @@ class PlannerAgent(Agent[PlannerInput, PlanContext]):
             try:
                 resp = self.llm_client.generate_json(
                     self.model_name,
-                    build_prompt("planner", user_prompt, language=data.task.language),
+                    build_prompt(
+                        "planner",
+                        user_prompt,
+                        language=data.task.language,
+                    ),
                     chunk_callback=self._stream_chunk,
                 )
                 raw_steps = resp.get("steps", [])

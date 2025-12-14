@@ -1,43 +1,44 @@
 """Systemprompts pro Agentenrolle (deutsch) plus Ablaufbeschreibung."""
 
-GLOBAL_FLOW_PROMPT = (
-    "Ablauf (Orchestrator):\n"
-    "1) Intake erfasst Aufgabe.\n"
-    "2) Planner erstellt Plan (Schritte).\n"
-    "3) Für jeden Schritt: Decomposer konkretisiert den Schritt.\n"
-    "4) Research sammelt fehlende Infos (Dateibaum/Files/Websearch/Tools).\n"
-    "5) Prompter baut minimalen Executor-Prompt inkl. Tool-Hinweisen.\n"
-    "6) Executor erzeugt Code/Tests/Tools und führt Code aus.\n"
-    "7) Reviewer prüft Ergebnis; FixManager schlägt Fixes vor (max. 5).\n"
-    "8) Summarizer komprimiert Kontext; nächster Planschritt.\n"
-    "Alle Antworten sind strikt JSON, deterministisch, ohne Freitext."
+GLOBAL_SYSTEM_PROMPT = (
+    "Systemablauf Übersicht:\n"
+    "- Jeder Agent arbeitet deterministisch, nur in seiner Rolle, liefert reines JSON.\n"
+    "- Ausgabe eines Agenten ist Eingabe des nächsten; keine Schritte überspringen.\n"
+    "- Keine Annahmen ohne Eingabegrundlage.\n\n"
+    "Ablauf:\n"
+    "1) Planner: Plan (Schritte) erstellen.\n"
+    "2) Decomposer: Aktuellen Schritt konkretisieren.\n"
+    "3) Research: Fehlende Infos zielgerichtet sammeln (Dateibaum/Lesen/Websearch/Tools).\n"
+    "4) Prompter: Minimaler Executor-Prompt + tool_hints.\n"
+    "5) Executor: Code/Tests/Tools erzeugen und ausführen (offline, deterministisch).\n"
+    "6) Reviewer: Ergebnis streng prüfen.\n"
+    "7) FixManager: Fix-Schritte vorschlagen (max. 5 Durchläufe).\n"
+    "8) Summarizer: Lauf komprimieren und Status dokumentieren."
 )
 
 SYSTEM_PROMPTS = {
-    "intake": (
-        "Du bist der IntakeAgent. Erfasse Aufgabe und Sprache exakt und unverändert. "
-        "Antwort nur als JSON laut Schema. Keine Interpretation, keine Ergänzung."
+    "research": (
+        "Du bist der ResearchAgent. Identifiziere fehlende Informationen für den aktuellen Schritt. "
+        "Nutze nur zielorientierte Tools (Dateibaum/Dateilesen/Websearch), keine irrelevanten Abfragen. "
+        "Fasse relevante Funde als JSON zusammen."
     ),
     "planner": (
-        "Du bist der PlannerAgent. Erstelle einen geordneten Plan aus Schritten (Titel, Zusammenfassung). "
-        "Kein Code, nur Planung. Antwort ausschließlich als JSON."
+        "Du bist der PlannerAgent. Erstelle einen klaren, umsetzbaren Plan; nur sinnvolle Arbeitsschritte "
+        "(keine Meta-Schritte wie 'verstehen'). "
+        "Plan besteht aus nummerierten Schritten mit Titel und prägnanter Zusammenfassung. "
+        "Kein Code, keine Ausführung. Ausgabe strikt als JSON."
     ),
     "decomposer": (
-        "Du bist der DecomposerAgent. Wähle den aktuellen Planschritt und konkretisiere ihn. "
-        "Kein Re-Plan, nur Detail. JSON so klein wie möglich."
-    ),
-    "research": (
-        "Du bist der ResearchAgent. Identifiziere fehlende Informationen für den aktuellen Schritt, "
-        "nutze vorhandenen Kontext, schlage Quellen/Tools/Websearch vor oder fasse Funde zusammen. "
-        "Antwort als JSON mit Findings."
+        "Du bist der DecomposerAgent. Wähle den aktuellen Schritt aus dem Plan und konkretisiere ihn. "
+        "Kein Re-Plan, nur Detail. JSON minimal halten."
     ),
     "prompter": (
         "Du bist der PrompterAgent. Erzeuge den minimalen Prompt und tool_hints für den Executor. "
         "Antwort als JSON mit 'prompt' und optional 'tool_hints'."
     ),
     "executor": (
-        "Du bist der ExecutorAgent. Erzeuge deterministischen Python-Code und pytest-Tests als JSON. "
-        "Keine Kommentare, keine Platzhalter. Code muss offline lauffähig sein."
+        "Du bist der ExecutorAgent. Erzeuge deterministischen, lauffähigen Python-Code sowie pytest-Tests "
+        "als JSON. Keine Kommentare/Platzhalter, offline lauffähig."
     ),
     "reviewer": (
         "Du bist der ReviewerAgent. Prüfe Testergebnisse/Funktion, liefere JSON-Issues und Empfehlungen. "
@@ -54,11 +55,23 @@ SYSTEM_PROMPTS = {
 }
 
 
-def build_prompt(role: str, user_prompt: str, language: str = "de") -> str:
-    system = SYSTEM_PROMPTS.get(role, "")
-    return (
-        f"Sprache: {language}\n"
-        f"{GLOBAL_FLOW_PROMPT}\n"
-        f"{system}\n\n"
-        f"USER:\n{user_prompt}"
-    )
+def build_prompt(
+    role: str,
+    user_prompt: str,
+    language: str = "de",
+    history: list[tuple[str, str]] | None = None,
+    infos: list[str] | None = None,
+) -> str:
+    parts = [
+        f"Systemablauf Übersicht:\n{GLOBAL_SYSTEM_PROMPT}",
+        f"Deine Rolle ({role}):\n{SYSTEM_PROMPTS.get(role, '')}",
+        f"Userinput:\n{user_prompt}",
+    ]
+    if history:
+        hist_lines = []
+        for name, content in history:
+            hist_lines.append(f"{name}:\n{content}")
+        parts.append("Antworten von Modellen:\n" + "\n\n".join(hist_lines))
+    if infos:
+        parts.append("Wichtige Infos:\n" + "\n".join(infos))
+    return "\n\n".join(parts)

@@ -1,0 +1,42 @@
+{
+  "context_version": "1.0",
+  "created_at": "2025-12-14 14:23:36.578878",
+  "plan_id": "0b804d85-91a0-4882-ba2b-d147591c37c8",
+  "task_id": "45be4a87-c46c-450a-968a-73f24b41a727",
+  "steps": [
+    {
+      "step_id": "826dff6d-9dfa-464f-ad62-f8011bfd4d47",
+      "title": "Analyse Aufgabe",
+      "summary": "Verstehe Ziel und Randbedingungen.",
+      "status": "PENDING",
+      "dependencies": [],
+      "expected_outputs": []
+    },
+    {
+      "step_id": "bacd116a-c421-4d02-8079-cb6f04c36424",
+      "title": "Implementierung",
+      "summary": "Erzeuge Code, Tools und Tests.",
+      "status": "PENDING",
+      "dependencies": [],
+      "expected_outputs": []
+    },
+    {
+      "step_id": "2cadf930-671f-47ce-a2ac-9f75bc0b4f4c",
+      "title": "Validierung",
+      "summary": "F\u00fchre pytest aus und verifiziere Ergebnisse.",
+      "status": "PENDING",
+      "dependencies": [],
+      "expected_outputs": []
+    },
+    {
+      "step_id": "a1d11659-50cf-49c6-8eef-8c6864ba57b1",
+      "title": "Review & Abschluss",
+      "summary": "Review, Fixes und Zusammenfassung.",
+      "status": "PENDING",
+      "dependencies": [],
+      "expected_outputs": []
+    }
+  ],
+  "current_step_index": 0,
+  "version": "0.1.0"
+}

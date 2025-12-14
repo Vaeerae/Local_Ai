@@ -58,7 +58,15 @@ def run_ui(
             return []
 
     class SettingsDialog(QDialog):
-        def __init__(self, parent, current_language: str, current_models: dict, available_models: List[str]):
+        def __init__(
+            self,
+            parent,
+            current_language: str,
+            current_models: dict,
+            available_models: List[str],
+            use_unified_model: bool = False,
+            unified_model_value: str = "",
+        ):
             super().__init__(parent)
             self.setWindowTitle("Einstellungen")
             self.lang_combo = QComboBox()
@@ -74,6 +82,20 @@ def run_ui(
             if self.available_models:
                 self.model_selector.addItems(self.available_models)
 
+            self.unified_toggle = QComboBox()
+            self.unified_toggle.addItems(["pro Agent", "ein Modell für alle"])
+            self.unified_toggle.setCurrentText("ein Modell für alle" if use_unified_model else "pro Agent")
+            form.addRow("Modellmodus", self.unified_toggle)
+
+            self.unified_model = QComboBox()
+            if self.available_models:
+                self.unified_model.addItems(self.available_models)
+            if unified_model_value and unified_model_value in self.available_models:
+                self.unified_model.setCurrentText(unified_model_value)
+            self.unified_model_row = (QLabel("Gemeinsames Modell"), self.unified_model)
+            form.addRow(*self.unified_model_row)
+
+            self.per_agent_rows = []
             models_map = current_models or {}
             for agent_name, model_name in sorted(models_map.items()):
                 combo = QComboBox()
@@ -82,7 +104,14 @@ def run_ui(
                 if model_name in entries:
                     combo.setCurrentText(model_name)
                 self.model_inputs[agent_name] = combo
-                form.addRow(f"Modell {agent_name}", combo)
+                label = QLabel(f"Modell {agent_name}")
+                self.per_agent_rows.append((label, combo))
+                form.addRow(label, combo)
+
+            self._sync_visibility(use_unified_model)
+            self.unified_toggle.currentTextChanged.connect(
+                lambda _: self._sync_visibility(self.unified_toggle.currentText() == "ein Modell für alle")
+            )
 
             buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
             buttons.accepted.connect(self.accept)
@@ -94,7 +123,17 @@ def run_ui(
 
         def get_values(self) -> tuple[str, dict]:
             models = {k: v.currentText() for k, v in self.model_inputs.items()}
-            return self.lang_combo.currentText(), models
+            use_unified = self.unified_toggle.currentText() == "ein Modell für alle"
+            unified_model = self.unified_model.currentText() if use_unified else ""
+            return self.lang_combo.currentText(), models, use_unified, unified_model
+
+        def _sync_visibility(self, use_unified: bool) -> None:
+            # Show only unified model field if unified mode; hide per-agent rows
+            self.unified_model_row[0].setVisible(use_unified)
+            self.unified_model_row[1].setVisible(use_unified)
+            for label, combo in self.per_agent_rows:
+                label.setVisible(not use_unified)
+                combo.setVisible(not use_unified)
 
     class MainWindow(QMainWindow):
         def __init__(
@@ -196,20 +235,53 @@ def run_ui(
                 self._append_chat("System", f"Plan: {steps}")
 
         def _open_settings(self) -> None:
-            dlg = SettingsDialog(self, self.language, self.models, self.available_models)
+            dlg = SettingsDialog(
+                self,
+                self.language,
+                self.models,
+                self.available_models,
+                use_unified_model=getattr(self.orchestrator.config, "unified_model", False)
+                if self.orchestrator else False,
+                unified_model_value=getattr(self.orchestrator.config, "unified_model_name", "")
+                if self.orchestrator else "",
+            )
             if dlg.exec():
-                lang, models = dlg.get_values()
+                lang, models, use_unified, unified_model = dlg.get_values()
                 self.language = lang
-                self.models.update(models)
-                if self.orchestrator:
-                    try:
-                        self.orchestrator.config.language = lang
-                        for agent_key, model_name in models.items():
-                            attr = f"{agent_key}_agent"
-                            if hasattr(self.orchestrator, attr):
-                                getattr(self.orchestrator, attr).model_name = model_name
-                    except Exception:
-                        pass
+                if use_unified and unified_model:
+                    # apply one model to all agents
+                    self.models = {k: unified_model for k in models.keys() or self.models.keys()}
+                    if self.orchestrator:
+                        try:
+                            self.orchestrator.config.unified_model = True
+                            self.orchestrator.config.unified_model_name = unified_model
+                            for agent_name in (
+                                "planner",
+                                "research",
+                                "decomposer",
+                                "prompter",
+                                "executor",
+                                "reviewer",
+                                "fix_manager",
+                                "summarizer",
+                            ):
+                                attr = f"{agent_name}_agent"
+                                if hasattr(self.orchestrator, attr):
+                                    getattr(self.orchestrator, attr).model_name = unified_model
+                        except Exception:
+                            pass
+                else:
+                    self.models.update(models)
+                    if self.orchestrator:
+                        try:
+                            self.orchestrator.config.unified_model = False
+                            self.orchestrator.config.language = lang
+                            for agent_key, model_name in models.items():
+                                attr = f"{agent_key}_agent"
+                                if hasattr(self.orchestrator, attr):
+                                    getattr(self.orchestrator, attr).model_name = model_name
+                        except Exception:
+                            pass
 
         def _append_chat(self, sender: str, message: str, loading: bool = False) -> None:
             self.chat_entries.append(

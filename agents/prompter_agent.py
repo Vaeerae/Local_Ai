@@ -41,6 +41,11 @@ class PrompterAgent(Agent[PrompterInput, PromptContext]):
                             f"Schema: {schema_hint}"
                         ),
                         language=data.task.language,
+                        history=[
+                            ("Planner", ", ".join(s.title for s in data.plan.steps)),
+                            ("Decomposer", data.step.summary),
+                            ("Research", "; ".join(f.content for f in data.findings)),
+                        ],
                     ),
                     chunk_callback=self._stream_chunk,
                 )

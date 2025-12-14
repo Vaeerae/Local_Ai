@@ -38,6 +38,10 @@ class ReviewerAgent(Agent[ReviewerInput, ReviewContext]):
 
         recommendations: list[str] = []
         if self.llm_client:
+            extra = [
+                ("Testergebnisse stdout", execution.result.stdout),
+                ("Testergebnisse stderr", execution.result.stderr),
+            ]
             try:
                 resp = self.llm_client.generate_json(
                     self.model_name,
@@ -49,6 +53,8 @@ class ReviewerAgent(Agent[ReviewerInput, ReviewContext]):
                             f"stderr:\n{execution.result.stderr}\n"
                             'Schema: { "recommendations": ["string"] }'
                         ),
+                        language=execution.prompt.language,
+                        infos=[f"{a}: {b}" for a, b in extra],
                     ),
                     chunk_callback=self._stream_chunk,
                 )

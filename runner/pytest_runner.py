@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -11,15 +12,17 @@ from context.models import ExecutionRequest, ExecutionResult, ExecutionStatus
 
 
 class PytestRunner:
-    def __init__(self, workspace: Path, timeout_seconds: int = 120) -> None:
+    def __init__(self, workspace: Path, timeout_seconds: int = 120, data_dir: Path | None = None) -> None:
         self.workspace = workspace
         self.timeout_seconds = timeout_seconds
         self.workspace.mkdir(parents=True, exist_ok=True)
+        self.data_dir = data_dir or workspace
+        Path(self.data_dir).mkdir(parents=True, exist_ok=True)
 
     def run(self, request: ExecutionRequest) -> ExecutionResult:
         run_id = f"run_{uuid4()}"
         base_dir = Path(request.working_dir) if request.working_dir else self.workspace
-        run_dir = base_dir
+        run_dir = base_dir / run_id
         tests_dir = run_dir / "tests"
         run_dir.mkdir(parents=True, exist_ok=True)
         tests_dir.mkdir(parents=True, exist_ok=True)
@@ -34,12 +37,15 @@ class PytestRunner:
 
         result = ExecutionResult(status=ExecutionStatus.RUNNING)
         try:
+            env = os.environ.copy()
+            env["USER_DATA_DIR"] = str(self.data_dir)
             proc = subprocess.run(
                 cmd,
                 cwd=run_dir,
                 capture_output=True,
                 text=True,
                 timeout=self.timeout_seconds,
+                env=env,
             )
             result.exit_code = proc.returncode
             result.stdout = proc.stdout

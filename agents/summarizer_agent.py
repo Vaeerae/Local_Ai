@@ -43,6 +43,7 @@ class SummarizerAgent(Agent[SummarizerInput, SummaryOutput]):
                             f"Plan: {[s.title for s in data.plan.steps]}\n"
                             f"Issues: {issues}\n"
                         ),
+                        language=data.task.language,
                     ),
                     chunk_callback=self._stream_chunk,
                 )
