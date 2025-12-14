@@ -1,0 +1,4 @@
+prompt für Modell executor:
+Step: Verstehe Ziel und Randbedingungen.
+Plan: ['Analyse Aufgabe', 'Implementierung', 'Validierung', 'Review & Abschluss']
+Generate deterministic code and pytest to fulfill this step.

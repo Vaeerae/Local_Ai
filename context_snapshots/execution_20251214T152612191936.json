@@ -1,0 +1,35 @@
+{
+  "context_version": "1.0",
+  "created_at": "2025-12-14 15:26:12.185441",
+  "step_id": "3ea0973d-af06-4ee8-ac57-25ca599f84a6",
+  "plan_id": "4b351890-2fc9-4677-b35a-3e9314ef3b29",
+  "task_id": "dbd1dd57-3018-4f86-a37e-52b4aa405437",
+  "prompt": {
+    "context_version": "1.0",
+    "created_at": "2025-12-14 15:26:11.836918",
+    "step_id": "3ea0973d-af06-4ee8-ac57-25ca599f84a6",
+    "plan_id": "4b351890-2fc9-4677-b35a-3e9314ef3b29",
+    "task_id": "dbd1dd57-3018-4f86-a37e-52b4aa405437",
+    "prompt": "Step: Verstehe Ziel und Randbedingungen.\nPlan: ['Analyse Aufgabe', 'Implementierung', 'Validierung', 'Review & Abschluss']\nGenerate deterministic code and pytest to fulfill this step.",
+    "tool_hints": [
+      "python"
+    ],
+    "language": "de"
+  },
+  "request": {
+    "code": "from pathlib import Path\nimport os\n\ndef run_task(filename: str = 'output.txt', content: str = 'ok'):\n    \"\"\"Write content to USER_DATA_DIR/filename and return path.\"\"\"\n    data_dir = Path(os.environ.get('USER_DATA_DIR', '.'))\n    data_dir.mkdir(parents=True, exist_ok=True)\n    target = data_dir / filename\n    target.write_text(content, encoding='utf-8')\n    return str(target)\n",
+    "tests": "from task_module import run_task\nfrom pathlib import Path\nimport os\n\ndef test_run_task():\n    p = Path(run_task('output.txt', 'ok'))\n    assert p.read_text(encoding='utf-8') == 'ok'\n    assert p.name == 'output.txt'\n",
+    "expected_output": "output.txt",
+    "working_dir": "C:\\Users\\user\\Desktop\\Privat\\python\\Local_Ai\\User\\tools"
+  },
+  "result": {
+    "status": "PASSED",
+    "stdout": ".                                                                        [100%]\n",
+    "stderr": "",
+    "traceback": null,
+    "exit_code": 0,
+    "test_report": {}
+  },
+  "tool_outputs": [],
+  "research_findings": []
+}

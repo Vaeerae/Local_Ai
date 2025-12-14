@@ -23,9 +23,10 @@ SYSTEM_PROMPTS = {
         "Fasse relevante Funde als JSON zusammen."
     ),
     "planner": (
-        "Du bist der PlannerAgent. Erstelle einen klaren, umsetzbaren Plan; nur sinnvolle Arbeitsschritte "
-        "(keine Meta-Schritte wie 'verstehen'). "
-        "Plan besteht aus nummerierten Schritten mit Titel und prägnanter Zusammenfassung. "
+        "Du bist der PlannerAgent. Analysiere die Aufgabe und erstelle einen klaren, umsetzbaren Plan; "
+        "nur sinnvolle Arbeitsschritte (keine Meta-Schritte wie 'verstehen'). "
+        "Der Plan besteht aus nummerierten Schritten mit Titel und prägnanter Zusammenfassung. "
+        "Wenn die Aufgabe einfach ist, darf der Plan aus nur einem Schritt bestehen. "
         "Kein Code, keine Ausführung. Ausgabe strikt als JSON."
     ),
     "decomposer": (

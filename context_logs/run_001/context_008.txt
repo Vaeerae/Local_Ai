@@ -1,0 +1,7 @@
+output von Modell executor (request):
+{
+  "code": "from pathlib import Path\nimport os\n\ndef run_task(filename: str = 'output.txt', content: str = 'ok'):\n    \"\"\"Write content to USER_DATA_DIR/filename and return path.\"\"\"\n    data_dir = Path(os.environ.get('USER_DATA_DIR', '.'))\n    data_dir.mkdir(parents=True, exist_ok=True)\n    target = data_dir / filename\n    target.write_text(content, encoding='utf-8')\n    return str(target)\n",
+  "tests": "from task_module import run_task\nfrom pathlib import Path\nimport os\n\ndef test_run_task():\n    p = Path(run_task('output.txt', 'ok'))\n    assert p.read_text(encoding='utf-8') == 'ok'\n    assert p.name == 'output.txt'\n",
+  "expected_output": "output.txt",
+  "working_dir": "C:\\Users\\user\\Desktop\\Privat\\python\\Local_Ai\\User\\tools"
+}

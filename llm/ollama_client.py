@@ -68,23 +68,21 @@ class OllamaClient:
             )
             for part in stream:
                 chunk = part.get("response", "") or ""
-                text += chunk
-                if chunk_callback and chunk:
-                    cleaned = self._emit_chunks(chunk, chunk_callback)
-                    # if no <think> tags, still emit the raw chunk
-                    if cleaned == chunk:
-                        chunk_callback(chunk)
+                cleaned = self._emit_chunks(chunk, chunk_callback) if chunk else ""
+                text += cleaned
+                if chunk_callback and chunk and cleaned == chunk:
+                    # no think tags; emit raw chunk
+                    chunk_callback(chunk)
         else:
             response = self.client.generate(
                 model=model,
                 prompt=prompt,
                 options=options,
             )
-            text = response.get("response", "") or ""
-            if chunk_callback and text:
-                cleaned = self._emit_chunks(text, chunk_callback)
-                if cleaned == text:
-                    chunk_callback(text)
+            raw = response.get("response", "") or ""
+            text = self._emit_chunks(raw, chunk_callback) if chunk_callback else raw
+            if chunk_callback and text == raw and raw:
+                chunk_callback(raw)
         try:
             return json.loads(text)
         except json.JSONDecodeError as exc:
